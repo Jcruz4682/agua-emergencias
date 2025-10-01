@@ -151,9 +151,9 @@ def dibujar_pozos(resultados, m):
     return m
 
 # ========= CARGA DE DATOS =========
-sectores_gdf = gpd.read_file(os.path.join(data_dir, "Sectores.shp")).to_crs(epsg=4326)
-distritos_gdf = gpd.read_file(os.path.join(data_dir, "DISTRITOS_Final.shp")).to_crs(epsg=4326)
-pozos_gdf = gpd.read_file(os.path.join(data_dir, "Pozos.shp")).to_crs(epsg=4326)
+sectores_gdf = gpd.read_file(os.path.join(data_dir, "Sectores.geojson")).to_crs(epsg=4326)
+distritos_gdf = gpd.read_file(os.path.join(data_dir, "DISTRITOS_Final.geojson")).to_crs(epsg=4326)
+pozos_gdf = gpd.read_file(os.path.join(data_dir, "Pozos.geojson")).to_crs(epsg=4326)
 demandas_sectores = pd.read_csv(os.path.join(data_dir, "Demandas_Sectores_30lhd.csv"))
 demandas_distritos = pd.read_csv(os.path.join(data_dir, "Demandas_Distritos_30lhd.csv"))
 
