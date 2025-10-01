@@ -37,11 +37,8 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# --- RUTA LOCAL ---
+# --- RUTA LOCAL RELATIVA ---
 data_dir = os.path.join(os.path.dirname(__file__), "Datos_qgis")
-if not os.path.exists(data_dir):
-    st.error(f"No se encontró la carpeta de datos: {data_dir}")
-    st.stop()
 
 # --- CONFIG CISERNAS ---
 cisternas = {"19 m³": {"capacidad": 19}, "34 m³": {"capacidad": 34}}
@@ -151,10 +148,10 @@ def dibujar_pozos(resultados, m):
     return m
 
 # ========= CARGA DE DATOS =========
-sectores_gdf = gpd.read_file(os.path.join(data_dir, "Sectores.geojson")).to_crs(epsg=4326)
+sectores_gdf  = gpd.read_file(os.path.join(data_dir, "Sectores.geojson")).to_crs(epsg=4326)
 distritos_gdf = gpd.read_file(os.path.join(data_dir, "DISTRITOS_Final.geojson")).to_crs(epsg=4326)
-pozos_gdf = gpd.read_file(os.path.join(data_dir, "Pozos.geojson")).to_crs(epsg=4326)
-demandas_sectores = pd.read_csv(os.path.join(data_dir, "Demandas_Sectores_30lhd.csv"))
+pozos_gdf     = gpd.read_file(os.path.join(data_dir, "Pozos.geojson")).to_crs(epsg=4326)
+demandas_sectores  = pd.read_csv(os.path.join(data_dir, "Demandas_Sectores_30lhd.csv"))
 demandas_distritos = pd.read_csv(os.path.join(data_dir, "Demandas_Distritos_30lhd.csv"))
 
 sectores_gdf["ZONENAME"] = sectores_gdf["ZONENAME"].apply(normalizar)
