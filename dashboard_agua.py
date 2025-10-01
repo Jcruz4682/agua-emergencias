@@ -38,7 +38,7 @@ st.markdown(
 )
 
 # --- RUTA LOCAL ---
-data_dir = r"C:\Users\jcruzm\Desktop\Run_Modelo\Analisis_Agosto\Datos_qgis"
+data_dir = os.path.join(os.path.dirname(__file__), "Datos_qgis")
 if not os.path.exists(data_dir):
     st.error(f"No se encontró la carpeta de datos: {data_dir}")
     st.stop()
