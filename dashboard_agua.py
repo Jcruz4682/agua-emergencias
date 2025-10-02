@@ -102,14 +102,21 @@ def rename_columns(df):
     return df.rename(columns={c: mapping.get(c,c) for c in df.columns})
 
 def plot_bar(df, x, y, title, xlabel, ylabel):
-    fig = px.bar(df, x=x, y=y, title=title, color=y,
-                 color_continuous_scale="Blues")
+    fig = px.bar(
+        df, x=x, y=y, title=title, color=y,
+        color_continuous_scale=px.colors.sequential.Plasma,  # paleta más fuerte
+        text_auto=True  # mostrar valores sobre las barras
+    )
     fig.update_layout(
         xaxis_title=xlabel,
         yaxis_title=ylabel,
         plot_bgcolor="white",
         xaxis=dict(showgrid=True, gridcolor="lightgrey"),
-        yaxis=dict(showgrid=True, gridcolor="lightgrey")
+        yaxis=dict(showgrid=True, gridcolor="lightgrey"),
+        coloraxis_colorbar=dict(
+            title=y,  # título de la barra de color
+            tickformat=".0f"
+        )
     )
     return fig
 
