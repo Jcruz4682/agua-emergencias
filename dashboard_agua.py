@@ -127,6 +127,7 @@ def mostrar_kpis(nombre, demanda, restante, viajes, costo, consumo):
     cobertura = (1-restante/demanda)*100 if demanda>0 else 0
     fila1[0].metric("🚰 Demanda (m³/día)", f"{demanda:,.1f}")
     fila1[1].metric("🎯 Cobertura (%)", f"{cobertura:.1f}%")
+    fila1[2].metric("🏭 Pozos usados", f"{len(resultados)}")
     fila2[0].metric("🚛 Viajes", f"{viajes}")
     fila2[1].metric("💵 Costo (S/)", f"{costo:,.2f}")
     fila2[2].metric("⛽ Consumo (gal)", f"{consumo:,.1f}")
@@ -204,7 +205,7 @@ if modo == "Sector":
     demanda = float(row.get("Demanda_m3_dia",0))
     resultados, restante, viajes, costo, consumo = asignar_pozos(row.geometry.centroid, demanda, escenario_sel, cisterna_sel, pozos_gdf)
 
-    mostrar_kpis(f"📍 Sector {sector_sel}", demanda, restante, viajes, costo, consumo)
+        mostrar_kpis(f"📍 Sector {sector_sel}", demanda, restante, viajes, costo, consumo, resultados)
 
     m = folium.Map(location=[row.geometry.centroid.y, row.geometry.centroid.x], zoom_start=13, tiles="cartodbpositron")
     folium.GeoJson(row.geometry, style_function=lambda x: {"color":"red","fillOpacity":0.3}).add_to(m)
@@ -227,7 +228,7 @@ elif modo == "Distrito":
     demanda = float(row.get("Demanda_Distrito_m3_30_lhd",0))
     resultados, restante, viajes, costo, consumo = asignar_pozos(row.geometry.centroid, demanda, escenario_sel, cisterna_sel, pozos_gdf)
 
-    mostrar_kpis(f"🏙️ Distrito {dist_sel}", demanda, restante, viajes, costo, consumo)
+    mostrar_kpis(f"🏙️ Distrito {dist_sel}", demanda, restante, viajes, costo, consumo, resultados)
 
     m = folium.Map(location=[row.geometry.centroid.y, row.geometry.centroid.x], zoom_start=11, tiles="cartodbpositron")
     folium.GeoJson(row.geometry, style_function=lambda x: {"color":"green","fillOpacity":0.2}).add_to(m)
@@ -253,7 +254,7 @@ elif modo == "Combinación Distritos":
         geom_union = unary_union(rows.geometry)
         resultados, restante, viajes, costo, consumo = asignar_pozos(geom_union.centroid, demanda, escenario_sel, cisterna_sel, pozos_gdf)
 
-        mostrar_kpis(f"🌀 Combinación: {', '.join(seleccion)}", demanda, restante, viajes, costo, consumo)
+        mostrar_kpis(f"🌀 Combinación: {', '.join(seleccion)}", demanda, restante, viajes, costo, consumo, resultados)
 
         m = folium.Map(location=[geom_union.centroid.y, geom_union.centroid.x], zoom_start=10, tiles="cartodbpositron")
         folium.GeoJson(geom_union, style_function=lambda x: {"color":"purple","fillOpacity":0.2}).add_to(m)
