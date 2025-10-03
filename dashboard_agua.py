@@ -120,11 +120,11 @@ def plot_bar(df, x, y, title, xlabel, ylabel):
     )
     return fig
 
-def mostrar_kpis(nombre, demanda, restante, viajes, costo, consumo):
+def mostrar_kpis(nombre, demanda, restante, viajes, costo, consumo, resultados):
     st.markdown(f"### {nombre}")
-    fila1 = st.columns(2)
+    fila1 = st.columns(3)
     fila2 = st.columns(3)
-    cobertura = (1-restante/demanda)*100 if demanda>0 else 0
+    cobertura = (1-restante/demanda)*100 if demanda > 0 else 0
     fila1[0].metric("🚰 Demanda (m³/día)", f"{demanda:,.1f}")
     fila1[1].metric("🎯 Cobertura (%)", f"{cobertura:.1f}%")
     fila1[2].metric("🏭 Pozos usados", f"{len(resultados)}")
