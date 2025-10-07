@@ -31,7 +31,7 @@ if not st.session_state["auth"]:
 
 # --- TITULO PRINCIPAL ---
 st.markdown(
-    "<h2 style='text-align:center;'>"
+    "<h2 style='text-align:center; color:#003366;'>"
     "MODELO TÉCNICO-OPERATIVO DE REDISTRIBUCIÓN TEMPORAL DE USO DE AGUA INDUSTRIAL PARA EMERGENCIAS HÍDRICAS"
     "</h2>",
     unsafe_allow_html=True,
@@ -78,13 +78,11 @@ escenario_sel = st.sidebar.selectbox(
 # Tipo de cisterna
 cisterna_sel = st.sidebar.radio("Seleccionar tipo de cisterna", list(cisternas.keys()))
 
-# Valores fijos para consumo, costo y velocidad
+# Valores fijos
 st.sidebar.markdown("**Consumo de combustible:** 6.0 gal/h")
 consumo_gal_h = 6.0
-
 st.sidebar.markdown("**Costo por galón:** S/ 20.00")
 costo_galon = 20.0
-
 st.sidebar.markdown("**Velocidad de referencia:** 30 km/h")
 velocidad_kmh = 30.0
 
@@ -127,33 +125,27 @@ def rename_columns(df):
         "Viajes": "N° Viajes",
         "Costo": "Costo (Soles)",
         "Consumo": "Consumo (galones)",
-        "Dist_km": "Distancia (km)",
-        "Sector": "Sector",
-        "Demanda": "Demanda (m³/día)",
-        "Cobertura_%": "Cobertura (%)",
-        "Faltante": "Faltante (m³/día)",
-        "Distrito": "Distrito"
+        "Dist_km": "Distancia (km)"
     }
     return df.rename(columns={c: mapping.get(c,c) for c in df.columns})
 
 def plot_bar(df, x, y, title, xlabel, ylabel):
-    fig = px.bar(
-        df, x=x, y=y, title=title, color=y,
-        color_continuous_scale=px.colors.sequential.Plasma,
-        text_auto=True
-    )
+    fig = px.bar(df, x=x, y=y, title=title, color=y,
+                 color_continuous_scale=px.colors.sequential.Plasma, text_auto=True)
     fig.update_layout(
+        title=dict(text=title, font=dict(size=18, color="#003366")),
         xaxis_title=xlabel,
         yaxis_title=ylabel,
         plot_bgcolor="white",
-        xaxis=dict(showgrid=True, gridcolor="lightgrey"),
-        yaxis=dict(showgrid=True, gridcolor="lightgrey"),
+        font=dict(family="Segoe UI", size=13, color="#222"),
+        xaxis=dict(showgrid=True, gridcolor="lightgray"),
+        yaxis=dict(showgrid=True, gridcolor="lightgray"),
         coloraxis_colorbar=dict(title=y, tickformat=".0f")
     )
     return fig
 
 def mostrar_kpis(nombre, demanda, restante, viajes, costo, consumo, resultados):
-    st.markdown(f"### {nombre}")
+    st.markdown(f"<h3 style='color:#003366;'>{nombre}</h3>", unsafe_allow_html=True)
     fila1 = st.columns(3)
     fila2 = st.columns(3)
     cobertura = (1-restante/demanda)*100 if demanda > 0 else 0
@@ -163,19 +155,16 @@ def mostrar_kpis(nombre, demanda, restante, viajes, costo, consumo, resultados):
     fila2[0].metric("🚛 Viajes", f"{viajes}")
     fila2[1].metric("💵 Costo (S/)", f"{costo:,.2f}")
     fila2[2].metric("⛽ Consumo (gal)", f"{consumo:,.1f}")
-    st.caption("⚠️ Los costos presentados corresponden únicamente al consumo de combustible.")
+    st.caption("⚠️ Los costos corresponden únicamente al consumo de combustible.")
 
+# --- CONCLUSIÓN OPERATIVA ---
 def agregar_conclusion(contexto, nombre, demanda, restante, viajes, costo, consumo, pozos):
     cobertura = (1 - restante / demanda) * 100 if demanda > 0 else 0
     cobertura_texto = f"{cobertura:.1f}%"
-
-    # Texto base
     base_texto = (
         f"En escenario de <b>emergencia hídrica</b> en el <b>{contexto.lower()} {nombre}</b>, "
         f"la demanda diaria (<b>{demanda:.2f} m³</b>) "
     )
-
-    # Caso 1: Demanda satisfecha
     if restante <= 0 or cobertura >= 99.9:
         texto = (
             base_texto +
@@ -185,12 +174,7 @@ def agregar_conclusion(contexto, nombre, demanda, restante, viajes, costo, consu
             f"El traslado implicó un <b>consumo de {consumo:.1f} gal</b> de combustible, "
             f"equivalente a <b>S/ {costo:,.2f}</b> en costos operativos."
         )
-
-        color = "#e8f5e9"  # verde claro
-        borde = "#2e7d32"  # verde intenso
-        icono = "✅"
-
-    # Caso 2: Demanda no satisfecha
+        color, borde, icono = "#e8f5e9", "#2e7d32", "✅"
     else:
         texto = (
             base_texto +
@@ -200,37 +184,24 @@ def agregar_conclusion(contexto, nombre, demanda, restante, viajes, costo, consu
             f"El traslado implicó un <b>consumo de {consumo:.1f} gal</b> de combustible, "
             f"equivalente a <b>S/ {costo:,.2f}</b> en costos operativos."
         )
-
-        color = "#fff3e0"  # naranja claro
-        borde = "#ef6c00"  # naranja fuerte
-        icono = "⚠️"
-
-    # Mostrar el título centrado y la tarjeta
-    st.markdown(
-        f"""
-        <div style='text-align:center; margin-top:25px;'>
-            <h4 style='color:#003366; font-family:"Segoe UI", sans-serif; margin-bottom:8px;'>
-                📋 Conclusión Operativa
-            </h4>
-        </div>
-
-        <div style='background-color:{color};
-                    border-left:6px solid {borde};
-                    padding:15px 22px;
-                    margin-top:8px;
-                    border-radius:6px;
-                    color:#222;
-                    font-size:16px;
-                    line-height:1.6;
-                    font-family:"Segoe UI", sans-serif;'>
-            <b>{icono} Conclusión:</b><br>
-            {texto}
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-
+        color, borde, icono = "#fff3e0", "#ef6c00", "⚠️"
+    st.markdown(f"""
+    <div style='text-align:center; margin-top:25px;'>
+        <h4 style='color:#003366; font-family:"Segoe UI", sans-serif;'>📋 Conclusión Operativa</h4>
+    </div>
+    <div style='background-color:{color};
+                border-left:6px solid {borde};
+                padding:15px 22px;
+                margin-top:8px;
+                border-radius:6px;
+                color:#222;
+                font-size:16px;
+                line-height:1.6;
+                font-family:"Segoe UI", sans-serif;'>
+        <b>{icono} Conclusión:</b><br>
+        {texto}
+    </div>
+    """, unsafe_allow_html=True)
 def agregar_leyenda(m):
     legend_html = """
     <div style="position: fixed; bottom: 20px; left: 20px; width: 200px;
@@ -295,17 +266,31 @@ if modo == "Sector":
 
     mostrar_kpis(f"📍 Sector {sector_sel}", demanda, restante, viajes, costo, consumo, resultados)
 
+    # --- Tabla ---
+    st.markdown("### 📘 Resultados por pozo")
+    st.caption("Pozos industriales asignados al sector, con su aporte, viajes, consumo y costo asociado.")
+    df_res = pd.DataFrame(resultados, columns=["Pozo_ID","Aporte","Viajes","Costo","Consumo","Dist_km","geom"]).drop(columns="geom")
+    df_res = rename_columns(df_res)
+    styled_df = df_res.style.background_gradient(subset=["Aporte (m³/día)"], cmap="YlGnBu").format({
+        "Costo (Soles)": "{:,.2f}", "Consumo (galones)": "{:,.1f}", "Distancia (km)": "{:,.2f}"
+    })
+    st.dataframe(styled_df, use_container_width=True)
+
+    # --- Gráfico ---
+    st.markdown("### 📊 Distribución del aporte por pozo")
+    st.caption("Visualización del aporte diario de cada pozo industrial en el escenario seleccionado.")
+    st.plotly_chart(plot_bar(df_res, x="N° Pozo", y="Aporte (m³/día)",
+                             title="Aporte por pozo industrial", xlabel="N° Pozo", ylabel="Aporte (m³/día)"),
+                    use_container_width=True)
+
+    # --- Mapa ---
+    st.markdown("### 🗺️ Ubicación espacial de pozos y sector")
+    st.caption("Visualización geoespacial del sector analizado y los pozos industriales más cercanos.")
     m = folium.Map(location=[row.geometry.centroid.y, row.geometry.centroid.x], zoom_start=13, tiles="cartodbpositron")
     folium.GeoJson(row.geometry, style_function=lambda x: {"color":"red","fillOpacity":0.3}).add_to(m)
     m = dibujar_pozos(resultados, m)
     m = agregar_leyenda(m)
     st_folium(m, width=900, height=500)
-
-    df_res = pd.DataFrame(resultados, columns=["Pozo_ID","Aporte","Viajes","Costo","Consumo","Dist_km","geom"]).drop(columns="geom")
-    df_res = rename_columns(df_res)
-    st.dataframe(df_res)
-    st.plotly_chart(plot_bar(df_res, x="N° Pozo", y="Aporte (m³/día)",
-                             title="Aporte por pozo", xlabel="N° Pozo", ylabel="Aporte (m³/día)"), use_container_width=True)
 
     agregar_conclusion("sector", sector_sel, demanda, restante, viajes, costo, consumo, resultados)
 
@@ -318,17 +303,28 @@ elif modo == "Distrito":
 
     mostrar_kpis(f"🏙️ Distrito {dist_sel}", demanda, restante, viajes, costo, consumo, resultados)
 
+    st.markdown("### 📘 Resultados por pozo")
+    st.caption("Pozos industriales asignados al distrito, con su aporte, viajes, consumo y costo asociado.")
+    df_res = pd.DataFrame(resultados, columns=["Pozo_ID","Aporte","Viajes","Costo","Consumo","Dist_km","geom"]).drop(columns="geom")
+    df_res = rename_columns(df_res)
+    styled_df = df_res.style.background_gradient(subset=["Aporte (m³/día)"], cmap="YlGnBu").format({
+        "Costo (Soles)": "{:,.2f}", "Consumo (galones)": "{:,.1f}", "Distancia (km)": "{:,.2f}"
+    })
+    st.dataframe(styled_df, use_container_width=True)
+
+    st.markdown("### 📊 Distribución del aporte por pozo")
+    st.caption("Visualización del aporte diario de cada pozo industrial al distrito seleccionado.")
+    st.plotly_chart(plot_bar(df_res, x="N° Pozo", y="Aporte (m³/día)",
+                             title="Aporte por pozo industrial", xlabel="N° Pozo", ylabel="Aporte (m³/día)"),
+                    use_container_width=True)
+
+    st.markdown("### 🗺️ Ubicación espacial de pozos y distrito")
+    st.caption("Mapa del distrito y de los pozos industriales más cercanos.")
     m = folium.Map(location=[row.geometry.centroid.y, row.geometry.centroid.x], zoom_start=11, tiles="cartodbpositron")
     folium.GeoJson(row.geometry, style_function=lambda x: {"color":"green","fillOpacity":0.2}).add_to(m)
     m = dibujar_pozos(resultados, m)
     m = agregar_leyenda(m)
     st_folium(m, width=900, height=500)
-
-    df_res = pd.DataFrame(resultados, columns=["Pozo_ID","Aporte","Viajes","Costo","Consumo","Dist_km","geom"]).drop(columns="geom")
-    df_res = rename_columns(df_res)
-    st.dataframe(df_res)
-    st.plotly_chart(plot_bar(df_res, x="N° Pozo", y="Aporte (m³/día)",
-                             title="Aporte por pozo", xlabel="N° Pozo", ylabel="Aporte (m³/día)"), use_container_width=True)
 
     agregar_conclusion("distrito", dist_sel, demanda, restante, viajes, costo, consumo, resultados)
 
@@ -344,17 +340,27 @@ elif modo == "Combinación Distritos":
 
         mostrar_kpis(f"🌀 Combinación: {', '.join(seleccion)}", demanda, restante, viajes, costo, consumo, resultados)
 
+        st.markdown("### 📘 Resultados por pozo")
+        st.caption("Pozos industriales utilizados para abastecer la combinación crítica de distritos seleccionada.")
+        df_res = pd.DataFrame(resultados, columns=["Pozo_ID","Aporte","Viajes","Costo","Consumo","Dist_km","geom"]).drop(columns="geom")
+        df_res = rename_columns(df_res)
+        styled_df = df_res.style.background_gradient(subset=["Aporte (m³/día)"], cmap="YlGnBu").format({
+            "Costo (Soles)": "{:,.2f}", "Consumo (galones)": "{:,.1f}", "Distancia (km)": "{:,.2f}"
+        })
+        st.dataframe(styled_df, use_container_width=True)
+
+        st.markdown("### 📊 Distribución del aporte por pozo")
+        st.caption("Aporte total por pozo industrial a la combinación crítica de distritos.")
+        st.plotly_chart(plot_bar(df_res, x="N° Pozo", y="Aporte (m³/día)",
+                                 title="Aporte por pozo industrial", xlabel="N° Pozo", ylabel="Aporte (m³/día)"),
+                        use_container_width=True)
+
+        st.markdown("### 🗺️ Distribución espacial de los pozos y distritos combinados")
         m = folium.Map(location=[geom_union.centroid.y, geom_union.centroid.x], zoom_start=10, tiles="cartodbpositron")
         folium.GeoJson(geom_union, style_function=lambda x: {"color":"purple","fillOpacity":0.2}).add_to(m)
         m = dibujar_pozos(resultados, m)
         m = agregar_leyenda(m)
         st_folium(m, width=900, height=500)
-
-        df_res = pd.DataFrame(resultados, columns=["Pozo_ID","Aporte","Viajes","Costo","Consumo","Dist_km","geom"]).drop(columns="geom")
-        df_res = rename_columns(df_res)
-        st.dataframe(df_res)
-        st.plotly_chart(plot_bar(df_res, x="N° Pozo", y="Aporte (m³/día)",
-                                 title="Aporte por pozo", xlabel="N° Pozo", ylabel="Aporte (m³/día)"), use_container_width=True)
 
         agregar_conclusion("combinación crítica de distritos", ", ".join(seleccion), demanda, restante, viajes, costo, consumo, resultados)
 
@@ -369,46 +375,10 @@ elif modo == "Resumen general":
             _, restante, viajes, costo, consumo = asignar_pozos(row.geometry.centroid, demanda, escenario_sel, cisterna_sel, pozos_gdf)
             cobertura = (1-restante/demanda)*100 if demanda>0 else 0
             resumen_sectores.append([row["ZONENAME"], demanda, viajes, costo, consumo, restante, cobertura])
-
     df_sec = pd.DataFrame(resumen_sectores, columns=["Sector","Demanda","Viajes","Costo","Consumo","Faltante","Cobertura_%"])
     df_sec = rename_columns(df_sec)
     st.markdown("### 📍 Sectores")
     st.dataframe(df_sec)
     st.plotly_chart(plot_bar(df_sec, x="Sector", y="Costo (Soles)",
                              title="Costo por sector", xlabel="Sector", ylabel="Costo (S/)"),
-                    use_container_width=True)
-
-    resumen_distritos = []
-    for _, row in distritos_gdf.iterrows():
-        demanda = float(row.get("Demanda_Distrito_m3_30_lhd",0))
-        if demanda > 0:
-            _, restante, viajes, costo, consumo = asignar_pozos(row.geometry.centroid, demanda, escenario_sel, cisterna_sel, pozos_gdf)
-            cobertura = (1-restante/demanda)*100 if demanda>0 else 0
-            resumen_distritos.append([row["NOMBDIST"], demanda, viajes, costo, consumo, restante, cobertura])
-
-    df_dis = pd.DataFrame(resumen_distritos, columns=["Distrito","Demanda","Viajes","Costo","Consumo","Faltante","Cobertura_%"])
-    df_dis = rename_columns(df_dis)
-    st.markdown("### 🏙️ Distritos")
-    st.dataframe(df_dis)
-    st.plotly_chart(plot_bar(df_dis, x="Distrito", y="Costo (Soles)",
-                             title="Costo por distrito", xlabel="Distrito", ylabel="Costo (S/)"),
-                    use_container_width=True)
-
-    criticos = ["ATE","LURIGANCHO","SAN_JUAN_DE_LURIGANCHO","EL_AGUSTINO","SANTA_ANITA"]
-    rows = distritos_gdf[distritos_gdf["NOMBDIST"].isin(criticos)]
-    demanda = rows["Demanda_Distrito_m3_30_lhd"].sum()
-    _, restante, viajes, costo, consumo = asignar_pozos(unary_union(rows.geometry).centroid, demanda, escenario_sel, cisterna_sel, pozos_gdf)
-
-    st.markdown("### 🌀 Combinación crítica de distritos")
-    df_comb = pd.DataFrame({
-        "Distrito": criticos,
-        "Demanda (m³/día)": [
-            rows.loc[rows["NOMBDIST"]==d,"Demanda_Distrito_m3_30_lhd"].values[0]
-            for d in criticos if d in rows["NOMBDIST"].values
-        ]
-    })
-    st.dataframe(df_comb)
-    st.plotly_chart(plot_bar(df_comb, x="Distrito", y="Demanda (m³/día)",
-                             title="Demanda total en distritos críticos",
-                             xlabel="Distrito", ylabel="Demanda (m³/día)"),
                     use_container_width=True)
