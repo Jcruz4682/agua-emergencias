@@ -429,7 +429,7 @@ elif modo == "Distrito":
     )
 
     # --- Mostrar KPIs principales ---
-    mostrar_kpis(f"📍 Sector {sector_sel}", demanda, restante, viajes, costo, consumo, resultados)
+    mostrar_kpis(f"🏙️ Distrito {dist_sel}", demanda, restante, viajes, costo, consumo, resultados)
 
     st.markdown("### 📘 Resultados por pozo")
     st.caption("Pozos industriales asignados al distrito, con aporte, viajes, consumo y costo.")
@@ -581,10 +581,7 @@ elif modo == "Combinación Distritos":
         )
 
         # --- Mostrar KPIs ---
-        mostrar_kpis(
-            f"🌀 Combinación: {', '.join(seleccion)}",
-            demanda, restante, viajes, costo, consumo, resultados
-        )
+        mostrar_kpis(f"🌀 Combinación: {', '.join(seleccion)}", demanda, restante, viajes, costo, consumo, resultados)
 
         # --- Tabla de resultados ---
         st.markdown("### 📘 Resultados por pozo")
