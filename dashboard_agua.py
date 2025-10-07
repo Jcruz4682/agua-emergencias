@@ -250,7 +250,12 @@ if modo == "Sector":
     df_res = pd.DataFrame(resultados, columns=["Pozo_ID","Aporte","Viajes","Costo","Consumo","Dist_km","geom"]).drop(columns="geom")
     df_res = rename_columns(df_res)
     styled_df = df_res.style.background_gradient(subset=["Aporte (m³/día)"], cmap="YlGnBu").format({
-        "Costo (Soles)": "{:,.2f}", "Consumo (galones)": "{:,.1f}", "Distancia (km)": "{:,.2f}"
+    "Aporte (m³/día)": "{:,.2f}",
+    "Costo (Soles)": "{:,.2f}",
+    "Consumo (galones)": "{:,.1f}",
+    "Distancia (km)": "{:,.2f}"
+})
+
     })
     st.dataframe(styled_df, use_container_width=True)
 
@@ -405,8 +410,11 @@ elif modo == "Distrito":
     df_res = pd.DataFrame(resultados, columns=["Pozo_ID","Aporte","Viajes","Costo","Consumo","Dist_km","geom"]).drop(columns="geom")
     df_res = rename_columns(df_res)
     styled_df = df_res.style.background_gradient(subset=["Aporte (m³/día)"], cmap="YlGnBu").format({
-        "Costo (Soles)": "{:,.2f}", "Consumo (galones)": "{:,.1f}", "Distancia (km)": "{:,.2f}"
-    })
+    "Aporte (m³/día)": "{:,.2f}",
+    "Costo (Soles)": "{:,.2f}",
+    "Consumo (galones)": "{:,.1f}",
+    "Distancia (km)": "{:,.2f}"
+})
     st.dataframe(styled_df, use_container_width=True)
 
     st.markdown("### 📊 Distribución del aporte por pozo")
@@ -537,8 +545,11 @@ elif modo == "Combinación Distritos":
         df_res = pd.DataFrame(resultados, columns=["Pozo_ID","Aporte","Viajes","Costo","Consumo","Dist_km","geom"]).drop(columns="geom")
         df_res = rename_columns(df_res)
         styled_df = df_res.style.background_gradient(subset=["Aporte (m³/día)"], cmap="YlGnBu").format({
-            "Costo (Soles)": "{:,.2f}", "Consumo (galones)": "{:,.1f}", "Distancia (km)": "{:,.2f}"
-        })
+    "Aporte (m³/día)": "{:,.2f}",
+    "Costo (Soles)": "{:,.2f}",
+    "Consumo (galones)": "{:,.1f}",
+    "Distancia (km)": "{:,.2f}"
+})
         st.dataframe(styled_df, use_container_width=True)
 
         st.markdown("### 📊 Distribución del aporte por pozo")
