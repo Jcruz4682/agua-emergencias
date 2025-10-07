@@ -382,3 +382,69 @@ elif modo == "Resumen general":
     st.plotly_chart(plot_bar(df_sec, x="Sector", y="Costo (Soles)",
                              title="Costo por sector", xlabel="Sector", ylabel="Costo (S/)"),
                     use_container_width=True)
+    # --- Resumen Distritos ---
+    resumen_distritos = []
+    for _, row in distritos_gdf.iterrows():
+        demanda = float(row.get("Demanda_Distrito_m3_30_lhd", 0))
+        if demanda > 0:
+            _, restante, viajes, costo, consumo = asignar_pozos(
+                row.geometry.centroid, demanda, escenario_sel, cisterna_sel, pozos_gdf
+            )
+            cobertura = (1 - restante / demanda) * 100 if demanda > 0 else 0
+            resumen_distritos.append([
+                row["NOMBDIST"], demanda, viajes, costo, consumo, restante, cobertura
+            ])
+
+    df_dis = pd.DataFrame(
+        resumen_distritos,
+        columns=["Distrito", "Demanda", "Viajes", "Costo", "Consumo", "Faltante", "Cobertura_%"]
+    )
+    df_dis = rename_columns(df_dis)
+
+    st.markdown("### 🏙️ Distritos")
+    st.caption("Resumen de la redistribución temporal del agua industrial por distrito en el escenario seleccionado.")
+    st.dataframe(df_dis.style.background_gradient(subset=["Costo (Soles)"], cmap="Purples"), use_container_width=True)
+    st.plotly_chart(
+        plot_bar(df_dis, x="Distrito", y="Costo (Soles)",
+                 title="Costo por distrito", xlabel="Distrito", ylabel="Costo (S/)"
+                 ),
+        use_container_width=True
+    )
+
+    # --- Resumen Combinación Crítica ---
+    criticos = ["ATE", "LURIGANCHO", "SAN_JUAN_DE_LURIGANCHO", "EL_AGUSTINO", "SANTA_ANITA"]
+    rows = distritos_gdf[distritos_gdf["NOMBDIST"].isin(criticos)]
+    demanda = rows["Demanda_Distrito_m3_30_lhd"].sum()
+
+    _, restante, viajes, costo, consumo = asignar_pozos(
+        unary_union(rows.geometry).centroid, demanda, escenario_sel, cisterna_sel, pozos_gdf
+    )
+
+    st.markdown("### 🌀 Combinación crítica de distritos")
+    st.caption("Demanda total y costos operativos estimados para la combinación crítica de distritos más vulnerables.")
+    df_comb = pd.DataFrame({
+        "Distrito": criticos,
+        "Demanda (m³/día)": [
+            rows.loc[rows["NOMBDIST"] == d, "Demanda_Distrito_m3_30_lhd"].values[0]
+            for d in criticos if d in rows["NOMBDIST"].values
+        ]
+    })
+    st.dataframe(df_comb.style.background_gradient(subset=["Demanda (m³/día)"], cmap="YlGnBu"), use_container_width=True)
+    st.plotly_chart(
+        plot_bar(df_comb, x="Distrito", y="Demanda (m³/día)",
+                 title="Demanda total en distritos críticos",
+                 xlabel="Distrito", ylabel="Demanda (m³/día)"
+                 ),
+        use_container_width=True
+    )
+
+    agregar_conclusion(
+        "combinación crítica de distritos",
+        ", ".join(criticos),
+        demanda,
+        restante,
+        viajes,
+        costo,
+        consumo,
+        []
+    )
