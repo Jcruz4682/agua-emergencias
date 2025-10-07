@@ -438,13 +438,127 @@ elif modo == "Resumen general":
         use_container_width=True
     )
 
-    agregar_conclusion(
-        "combinación crítica de distritos",
-        ", ".join(criticos),
-        demanda,
-        restante,
-        viajes,
-        costo,
-        consumo,
-        []
+    # --- TOP 5 SECTORES MÁS COSTOSOS ---
+    st.markdown("### 💰 Top 5 sectores más costosos")
+    st.caption("Sectores con los mayores costos operativos estimados para el transporte de agua industrial en el escenario seleccionado.")
+    top5_costosos_sect = df_sec.nlargest(5, "Costo (Soles)")
+    st.dataframe(
+        top5_costosos_sect.style.background_gradient(subset=["Costo (Soles)"], cmap="Reds").format({
+            "Demanda": "{:,.2f}", "Costo (Soles)": "{:,.2f}", "Consumo (galones)": "{:,.1f}"
+        }),
+        use_container_width=True
     )
+    st.plotly_chart(
+        px.bar(
+            top5_costosos_sect,
+            x="Sector",
+            y="Costo (Soles)",
+            color="Costo (Soles)",
+            color_continuous_scale="Reds",
+            text_auto=True,
+            title="Top 5 sectores con mayor costo operativo"
+        ).update_layout(
+            xaxis_title="Sector",
+            yaxis_title="Costo (S/)",
+            plot_bgcolor="white",
+            font=dict(family="Segoe UI", size=13, color="#222"),
+            title=dict(font=dict(size=18, color="#003366")),
+            xaxis=dict(showgrid=True, gridcolor="lightgray"),
+            yaxis=dict(showgrid=True, gridcolor="lightgray")
+        ),
+        use_container_width=True
+    )
+
+    # --- TOP 5 SECTORES MÁS ECONÓMICOS ---
+    st.markdown("### 💧 Top 5 sectores más económicos")
+    st.caption("Sectores con los menores costos de transporte de agua industrial en el escenario seleccionado.")
+    top5_baratos_sect = df_sec.nsmallest(5, "Costo (Soles)")
+    st.dataframe(
+        top5_baratos_sect.style.background_gradient(subset=["Costo (Soles)"], cmap="Blues").format({
+            "Demanda": "{:,.2f}", "Costo (Soles)": "{:,.2f}", "Consumo (galones)": "{:,.1f}"
+        }),
+        use_container_width=True
+    )
+    st.plotly_chart(
+        px.bar(
+            top5_baratos_sect,
+            x="Sector",
+            y="Costo (Soles)",
+            color="Costo (Soles)",
+            color_continuous_scale="Blues",
+            text_auto=True,
+            title="Top 5 sectores con menor costo operativo"
+        ).update_layout(
+            xaxis_title="Sector",
+            yaxis_title="Costo (S/)",
+            plot_bgcolor="white",
+            font=dict(family="Segoe UI", size=13, color="#222"),
+            title=dict(font=dict(size=18, color="#003366")),
+            xaxis=dict(showgrid=True, gridcolor="lightgray"),
+            yaxis=dict(showgrid=True, gridcolor="lightgray")
+        ),
+        use_container_width=True
+    )
+
+    # --- TOP 5 DISTRITOS MÁS COSTOSOS ---
+    st.markdown("### 🏙️ Top 5 distritos más costosos")
+    st.caption("Distritos con los mayores costos de transporte de agua industrial según el escenario seleccionado.")
+    top5_costosos_dist = df_dis.nlargest(5, "Costo (Soles)")
+    st.dataframe(
+        top5_costosos_dist.style.background_gradient(subset=["Costo (Soles)"], cmap="Reds").format({
+            "Demanda": "{:,.2f}", "Costo (Soles)": "{:,.2f}", "Consumo (galones)": "{:,.1f}"
+        }),
+        use_container_width=True
+    )
+    st.plotly_chart(
+        px.bar(
+            top5_costosos_dist,
+            x="Distrito",
+            y="Costo (Soles)",
+            color="Costo (Soles)",
+            color_continuous_scale="Reds",
+            text_auto=True,
+            title="Top 5 distritos con mayor costo operativo"
+        ).update_layout(
+            xaxis_title="Distrito",
+            yaxis_title="Costo (S/)",
+            plot_bgcolor="white",
+            font=dict(family="Segoe UI", size=13, color="#222"),
+            title=dict(font=dict(size=18, color="#003366")),
+            xaxis=dict(showgrid=True, gridcolor="lightgray"),
+            yaxis=dict(showgrid=True, gridcolor="lightgray")
+        ),
+        use_container_width=True
+    )
+
+    # --- TOP 5 DISTRITOS MÁS ECONÓMICOS ---
+    st.markdown("### 🌿 Top 5 distritos más económicos")
+    st.caption("Distritos con los menores costos de transporte de agua industrial según el escenario seleccionado.")
+    top5_baratos_dist = df_dis.nsmallest(5, "Costo (Soles)")
+    st.dataframe(
+        top5_baratos_dist.style.background_gradient(subset=["Costo (Soles)"], cmap="Blues").format({
+            "Demanda": "{:,.2f}", "Costo (Soles)": "{:,.2f}", "Consumo (galones)": "{:,.1f}"
+        }),
+        use_container_width=True
+    )
+    st.plotly_chart(
+        px.bar(
+            top5_baratos_dist,
+            x="Distrito",
+            y="Costo (Soles)",
+            color="Costo (Soles)",
+            color_continuous_scale="Blues",
+            text_auto=True,
+            title="Top 5 distritos con menor costo operativo"
+        ).update_layout(
+            xaxis_title="Distrito",
+            yaxis_title="Costo (S/)",
+            plot_bgcolor="white",
+            font=dict(family="Segoe UI", size=13, color="#222"),
+            title=dict(font=dict(size=18, color="#003366")),
+            xaxis=dict(showgrid=True, gridcolor="lightgray"),
+            yaxis=dict(showgrid=True, gridcolor="lightgray")
+        ),
+        use_container_width=True
+    )
+
