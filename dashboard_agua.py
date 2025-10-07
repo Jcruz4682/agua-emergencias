@@ -52,15 +52,6 @@ st.markdown(
 # --- ESPACIO VISUAL ---
 st.markdown("<br>", unsafe_allow_html=True)
 
-
-# --- TITULO PRINCIPAL ---
-st.markdown(
-    "<h2 style='text-align:center; color:#003366;'>"
-    "MODELO TÉCNICO-OPERATIVO DE REDISTRIBUCIÓN TEMPORAL DE USO DE AGUA INDUSTRIAL PARA EMERGENCIAS HÍDRICAS"
-    "</h2>",
-    unsafe_allow_html=True,
-)
-
 # --- RUTA LOCAL ---
 data_dir = os.path.join(os.path.dirname(__file__), "Datos_qgis")
 
