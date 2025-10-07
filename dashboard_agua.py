@@ -29,6 +29,9 @@ if not st.session_state["auth"]:
         else:
             st.error("Credenciales inválidas")
     st.stop()
+    
+# ✅ Configuración general de la página
+st.set_page_config(layout="wide")
 
 # --- TITULO PRINCIPAL ---
 st.markdown(
