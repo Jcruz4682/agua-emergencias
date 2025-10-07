@@ -43,6 +43,23 @@ data_dir = os.path.join(os.path.dirname(__file__), "Datos_qgis")
 # --- CONFIG CISERNAS ---
 cisternas = {"19 m³": {"capacidad": 19}, "34 m³": {"capacidad": 34}}
 
+# ========= ESTILO DE LA SIDEBAR =========
+sidebar_style = """
+<style>
+    [data-testid="stSidebar"] {
+        background-color: #f7f7f7;
+        border-right: 2px solid #d1d1d1;
+        border-radius: 0px 10px 10px 0px;
+        padding: 20px;
+    }
+    [data-testid="stSidebar"] h2, h3, h4, label {
+        color: #333333;
+        font-family: 'Segoe UI', sans-serif;
+    }
+</style>
+"""
+st.markdown(sidebar_style, unsafe_allow_html=True)
+
 # ========= CONTROLES =========
 st.sidebar.header("⚙️ Configuración del análisis")
 
@@ -52,9 +69,9 @@ modo = st.sidebar.radio(
     ["Sector", "Distrito", "Combinación Distritos", "Resumen general"]
 )
 
-# Escenario
+# Escenario (texto mejorado)
 escenario_sel = st.sidebar.selectbox(
-    "Seleccionar Escenario (%) - Porcentaje del caudal autorizado por pozo",
+    "Seleccionar Escenario (% del caudal disponible por pozo)",
     [10, 20, 30]
 )
 
