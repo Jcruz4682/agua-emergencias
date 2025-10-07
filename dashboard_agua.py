@@ -41,7 +41,7 @@ if not st.session_state["auth"]:
 st.markdown(
     """
     <div style="text-align: center; margin-top: -40px;">
-        <h1 style="color:#003366; font-size:28px; font-family:'Segoe UI',sans-serif; text-transform:uppercase;">
+        <h1 style="color:#003366; font-size:42px; font-family:'Segoe UI',sans-serif; text-transform:uppercase;">
             MODELO TÉCNICO-OPERATIVO DE REDISTRIBUCIÓN TEMPORAL DE USO DE AGUA INDUSTRIAL PARA EMERGENCIAS HÍDRICAS
         </h1>
     </div>
