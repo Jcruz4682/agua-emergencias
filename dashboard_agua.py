@@ -45,12 +45,31 @@ cisternas = {"19 m³": {"capacidad": 19}, "34 m³": {"capacidad": 34}}
 
 # ========= CONTROLES =========
 st.sidebar.header("⚙️ Configuración del análisis")
-modo = st.sidebar.radio("Nivel de análisis", ["Sector", "Distrito", "Combinación Distritos", "Resumen general"])
-escenario_sel = st.sidebar.selectbox("Sleccionar Escenario (%) - Porcentaje del caudal autorizado por pozo", [10, 20, 30])
-cisterna_sel = st.sidebar.radio("Seleccionar cisterna", list(cisternas.keys()))
-consumo_gal_h = st.sidebar.slider("Consumo de combustible (gal/h)", 6.0)
-costo_galon = st.sidebar.number_input("Costo por galón (S/)", 20.0)
-velocidad_kmh = st.sidebar.number_input("Velocidad de referencia (km/h)", 30.0)
+
+# Nivel de análisis
+modo = st.sidebar.radio(
+    "Seleccionar nivel de análisis",
+    ["Sector", "Distrito", "Combinación Distritos", "Resumen general"]
+)
+
+# Escenario
+escenario_sel = st.sidebar.selectbox(
+    "Seleccionar Escenario (%) - Porcentaje del caudal autorizado por pozo",
+    [10, 20, 30]
+)
+
+# Tipo de cisterna
+cisterna_sel = st.sidebar.radio("Seleccionar tipo de cisterna", list(cisternas.keys()))
+
+# Valores fijos para consumo, costo y velocidad
+st.sidebar.markdown("**Consumo de combustible:** 6.0 gal/h")
+consumo_gal_h = 6.0
+
+st.sidebar.markdown("**Costo por galón:** S/ 20.00")
+costo_galon = 20.0
+
+st.sidebar.markdown("**Velocidad de referencia:** 30 km/h")
+velocidad_kmh = 30.0
 
 # ========= FUNCIONES =========
 def normalizar(x):
@@ -85,7 +104,6 @@ def asignar_pozos(geom_obj, demanda, escenario, tipo_cisterna, pozos_gdf):
     return resultados, restante, total_viajes, total_costo, total_consumo
 
 def rename_columns(df):
-    """Renombra columnas con títulos y unidades claras."""
     mapping = {
         "Pozo_ID": "N° Pozo",
         "Aporte": "Aporte (m³/día)",
@@ -104,8 +122,8 @@ def rename_columns(df):
 def plot_bar(df, x, y, title, xlabel, ylabel):
     fig = px.bar(
         df, x=x, y=y, title=title, color=y,
-        color_continuous_scale=px.colors.sequential.Plasma,  # paleta más fuerte
-        text_auto=True  # mostrar valores sobre las barras
+        color_continuous_scale=px.colors.sequential.Plasma,
+        text_auto=True
     )
     fig.update_layout(
         xaxis_title=xlabel,
@@ -113,10 +131,7 @@ def plot_bar(df, x, y, title, xlabel, ylabel):
         plot_bgcolor="white",
         xaxis=dict(showgrid=True, gridcolor="lightgrey"),
         yaxis=dict(showgrid=True, gridcolor="lightgrey"),
-        coloraxis_colorbar=dict(
-            title=y,  # título de la barra de color
-            tickformat=".0f"
-        )
+        coloraxis_colorbar=dict(title=y, tickformat=".0f")
     )
     return fig
 
@@ -195,12 +210,14 @@ distritos_gdf["NOMBDIST"] = distritos_gdf["NOMBDIST"].apply(normalizar)
 demandas_distritos["Distrito"] = demandas_distritos["Distrito"].apply(normalizar)
 
 sectores_gdf = sectores_gdf.merge(demandas_sectores[["ZONENAME","Demanda_m3_dia"]], on="ZONENAME", how="left")
-distritos_gdf = distritos_gdf.merge(demandas_distritos[["Distrito","Demanda_Distrito_m3_30_lhd"]],
-                                    left_on="NOMBDIST", right_on="Distrito", how="left")
+distritos_gdf = distritos_gdf.merge(
+    demandas_distritos[["Distrito","Demanda_Distrito_m3_30_lhd"]],
+    left_on="NOMBDIST", right_on="Distrito", how="left"
+)
 
 # ========= SECTOR =========
 if modo == "Sector":
-    sector_sel = st.sidebar.selectbox("Selecciona un sector", sorted(sectores_gdf["ZONENAME"].dropna().unique()))
+    sector_sel = st.sidebar.selectbox("Seleccionar sector", sorted(sectores_gdf["ZONENAME"].dropna().unique()))
     row = sectores_gdf[sectores_gdf["ZONENAME"] == sector_sel].iloc[0]
     demanda = float(row.get("Demanda_m3_dia",0))
     resultados, restante, viajes, costo, consumo = asignar_pozos(row.geometry.centroid, demanda, escenario_sel, cisterna_sel, pozos_gdf)
@@ -223,7 +240,7 @@ if modo == "Sector":
 
 # ========= DISTRITO =========
 elif modo == "Distrito":
-    dist_sel = st.sidebar.selectbox("Selecciona un distrito", sorted(distritos_gdf["NOMBDIST"].dropna().unique()))
+    dist_sel = st.sidebar.selectbox("Seleccionar distrito", sorted(distritos_gdf["NOMBDIST"].dropna().unique()))
     row = distritos_gdf[distritos_gdf["NOMBDIST"] == dist_sel].iloc[0]
     demanda = float(row.get("Demanda_Distrito_m3_30_lhd",0))
     resultados, restante, viajes, costo, consumo = asignar_pozos(row.geometry.centroid, demanda, escenario_sel, cisterna_sel, pozos_gdf)
@@ -247,7 +264,7 @@ elif modo == "Distrito":
 # ========= COMBINACIÓN DE DISTRITOS =========
 elif modo == "Combinación Distritos":
     criticos = ["ATE","LURIGANCHO","SAN_JUAN_DE_LURIGANCHO","EL_AGUSTINO","SANTA_ANITA"]
-    seleccion = st.sidebar.multiselect("Selecciona distritos críticos", criticos, default=criticos)
+    seleccion = st.sidebar.multiselect("Seleccionar combinación de distritos", criticos, default=criticos)
     if seleccion:
         rows = distritos_gdf[distritos_gdf["NOMBDIST"].isin(seleccion)]
         demanda = rows["Demanda_Distrito_m3_30_lhd"].sum()
@@ -274,68 +291,42 @@ elif modo == "Combinación Distritos":
 elif modo == "Resumen general":
     st.subheader("📊 Resumen general")
 
-    # --- Resumen Sectores ---
     resumen_sectores = []
     for _, row in sectores_gdf.iterrows():
         demanda = float(row.get("Demanda_m3_dia",0))
         if demanda > 0:
-            _, restante, viajes, costo, consumo = asignar_pozos(
-                row.geometry.centroid, demanda, escenario_sel, cisterna_sel, pozos_gdf
-            )
+            _, restante, viajes, costo, consumo = asignar_pozos(row.geometry.centroid, demanda, escenario_sel, cisterna_sel, pozos_gdf)
             cobertura = (1-restante/demanda)*100 if demanda>0 else 0
-            resumen_sectores.append([
-                row["ZONENAME"], demanda, viajes, costo, consumo, restante, cobertura
-            ])
+            resumen_sectores.append([row["ZONENAME"], demanda, viajes, costo, consumo, restante, cobertura])
 
-    df_sec = pd.DataFrame(
-        resumen_sectores,
-        columns=["Sector","Demanda","Viajes","Costo","Consumo","Faltante","Cobertura_%"]
-    )
+    df_sec = pd.DataFrame(resumen_sectores, columns=["Sector","Demanda","Viajes","Costo","Consumo","Faltante","Cobertura_%"])
     df_sec = rename_columns(df_sec)
     st.markdown("### 📍 Sectores")
     st.dataframe(df_sec)
-    st.plotly_chart(
-        plot_bar(df_sec, x="Sector", y="Costo (Soles)",
-                 title="Costo por sector", xlabel="Sector", ylabel="Costo (S/)"
-                 ),
-        use_container_width=True
-    )
+    st.plotly_chart(plot_bar(df_sec, x="Sector", y="Costo (Soles)",
+                             title="Costo por sector", xlabel="Sector", ylabel="Costo (S/)"),
+                    use_container_width=True)
 
-    # --- Resumen Distritos ---
     resumen_distritos = []
     for _, row in distritos_gdf.iterrows():
         demanda = float(row.get("Demanda_Distrito_m3_30_lhd",0))
         if demanda > 0:
-            _, restante, viajes, costo, consumo = asignar_pozos(
-                row.geometry.centroid, demanda, escenario_sel, cisterna_sel, pozos_gdf
-            )
+            _, restante, viajes, costo, consumo = asignar_pozos(row.geometry.centroid, demanda, escenario_sel, cisterna_sel, pozos_gdf)
             cobertura = (1-restante/demanda)*100 if demanda>0 else 0
-            resumen_distritos.append([
-                row["NOMBDIST"], demanda, viajes, costo, consumo, restante, cobertura
-            ])
+            resumen_distritos.append([row["NOMBDIST"], demanda, viajes, costo, consumo, restante, cobertura])
 
-    df_dis = pd.DataFrame(
-        resumen_distritos,
-        columns=["Distrito","Demanda","Viajes","Costo","Consumo","Faltante","Cobertura_%"]
-    )
+    df_dis = pd.DataFrame(resumen_distritos, columns=["Distrito","Demanda","Viajes","Costo","Consumo","Faltante","Cobertura_%"])
     df_dis = rename_columns(df_dis)
     st.markdown("### 🏙️ Distritos")
     st.dataframe(df_dis)
-    st.plotly_chart(
-        plot_bar(df_dis, x="Distrito", y="Costo (Soles)",
-                 title="Costo por distrito", xlabel="Distrito", ylabel="Costo (S/)"
-                 ),
-        use_container_width=True
-    )
+    st.plotly_chart(plot_bar(df_dis, x="Distrito", y="Costo (Soles)",
+                             title="Costo por distrito", xlabel="Distrito", ylabel="Costo (S/)"),
+                    use_container_width=True)
 
-    # --- Resumen Combinación Crítica ---
     criticos = ["ATE","LURIGANCHO","SAN_JUAN_DE_LURIGANCHO","EL_AGUSTINO","SANTA_ANITA"]
     rows = distritos_gdf[distritos_gdf["NOMBDIST"].isin(criticos)]
     demanda = rows["Demanda_Distrito_m3_30_lhd"].sum()
-
-    _, restante, viajes, costo, consumo = asignar_pozos(
-        unary_union(rows.geometry).centroid, demanda, escenario_sel, cisterna_sel, pozos_gdf
-    )
+    _, restante, viajes, costo, consumo = asignar_pozos(unary_union(rows.geometry).centroid, demanda, escenario_sel, cisterna_sel, pozos_gdf)
 
     st.markdown("### 🌀 Combinación crítica de distritos")
     df_comb = pd.DataFrame({
@@ -346,10 +337,7 @@ elif modo == "Resumen general":
         ]
     })
     st.dataframe(df_comb)
-    st.plotly_chart(
-        plot_bar(df_comb, x="Distrito", y="Demanda (m³/día)",
-                 title="Demanda total en distritos críticos",
-                 xlabel="Distrito", ylabel="Demanda (m³/día)"
-                 ),
-        use_container_width=True
-    )
+    st.plotly_chart(plot_bar(df_comb, x="Distrito", y="Demanda (m³/día)",
+                             title="Demanda total en distritos críticos",
+                             xlabel="Distrito", ylabel="Demanda (m³/día)"),
+                    use_container_width=True)
