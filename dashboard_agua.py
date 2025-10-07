@@ -46,11 +46,11 @@ cisternas = {"19 m³": {"capacidad": 19}, "34 m³": {"capacidad": 34}}
 # ========= CONTROLES =========
 st.sidebar.header("⚙️ Configuración del análisis")
 modo = st.sidebar.radio("Nivel de análisis", ["Sector", "Distrito", "Combinación Distritos", "Resumen general"])
-escenario_sel = st.sidebar.selectbox("Escenario (%)", [10, 20, 30])
-cisterna_sel = st.sidebar.radio("Tipo de cisterna", list(cisternas.keys()))
-consumo_gal_h = st.sidebar.slider("Consumo de combustible (gal/h)", 5.0, 6.0, 5.5, 0.1)
-costo_galon = st.sidebar.number_input("Costo por galón (S/)", 0.0, 20.0, 20.0, 0.5)
-velocidad_kmh = st.sidebar.number_input("Velocidad de referencia (km/h)", 1.0, 30.0, 30.0, 1.0)
+escenario_sel = st.sidebar.selectbox("Sleccionar Escenario (%) - Porcentaje del caudal autorizado por pozo", [10, 20, 30])
+cisterna_sel = st.sidebar.radio("Seleccionar cisterna", list(cisternas.keys()))
+consumo_gal_h = st.sidebar.slider("Consumo de combustible (gal/h)", 6.0)
+costo_galon = st.sidebar.number_input("Costo por galón (S/)", 20.0)
+velocidad_kmh = st.sidebar.number_input("Velocidad de referencia (km/h)", 30.0)
 
 # ========= FUNCIONES =========
 def normalizar(x):
