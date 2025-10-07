@@ -307,7 +307,7 @@ if modo == "Sector":
     st.markdown("## 📈 Análisis comparativo de eficiencia hídrico-económica")
     st.caption("Evaluación del desempeño del modelo frente a distintos escenarios de redistribución y tipos de cisterna.")
 
-    # --- Comparativa entre escenarios ---
+    # --- Comparativa entre escenarios y tipos de cisterna ---
     escenarios = [10, 20, 30]
     tipos_cisterna = ["19 m³", "34 m³"]
     comparacion_total = []
@@ -316,44 +316,54 @@ if modo == "Sector":
         for esc in escenarios:
             _, restante_esc, _, costo_esc, _ = asignar_pozos(row.geometry.centroid, demanda, esc, tipo, pozos_gdf)
             eficiencia_esc = ((demanda - restante_esc) / costo_esc) if costo_esc > 0 else 0
-            comparacion_total.append({"Escenario (%)": esc, "Cisterna": tipo, "Eficiencia (m³/S/)": eficiencia_esc})
+            comparacion_total.append({
+                "Escenario (%)": esc,
+                "Cisterna": tipo,
+                "Eficiencia (m³/S/)": eficiencia_esc
+            })
 
     df_comp = pd.DataFrame(comparacion_total)
 
-    # --- Gráfico combinado: Escenario vs Eficiencia (por tipo de cisterna) ---
-    # Redondear valores para etiquetas más limpias
-df_comp["Eficiencia_label"] = df_comp["Eficiencia (m³/S/)"].apply(lambda x: f"{x:.3f}")
+    # --- Gráfico 1: eficiencia por escenario y tipo de cisterna ---
+    df_comp["Eficiencia_label"] = df_comp["Eficiencia (m³/S/)"].apply(lambda x: f"{x:.3f}")
 
-# --- Gráfico de eficiencia por escenario y tipo de cisterna ---
-fig_eff = px.line(
-    df_comp,
-    x="Escenario (%)",
-    y="Eficiencia (m³/S/)",
-    color="Cisterna",
-    markers=True,
-    text="Eficiencia_label",
-    title="Comparación de eficiencia hídrico-económica por escenario y tipo de cisterna",
-    color_discrete_map={"19 m³": "#0077b6", "34 m³": "#009e73"}
-)
+    fig_eff = px.line(
+        df_comp,
+        x="Escenario (%)",
+        y="Eficiencia (m³/S/)",
+        color="Cisterna",
+        markers=True,
+        text="Eficiencia_label",
+        title="Comparación de eficiencia hídrico-económica por escenario y tipo de cisterna",
+        color_discrete_map={"19 m³": "#0077b6", "34 m³": "#009e73"}
+    )
 
-fig_eff.update_traces(textposition="top center", textfont_size=12)
-fig_eff.update_layout(
-    plot_bgcolor="white",
-    font=dict(family="Segoe UI", size=13, color="#222"),
-    title=dict(font=dict(size=16, color="#003366")),
-    xaxis=dict(showgrid=True, gridcolor="lightgray"),
-    yaxis=dict(showgrid=True, gridcolor="lightgray"),
-    yaxis_title="Eficiencia (m³ por S/)",
-    xaxis_title="Escenario de redistribución (%)",
-    legend_title="Tipo de cisterna"
-)
-st.plotly_chart(fig_eff, use_container_width=True)
+    fig_eff.update_traces(textposition="top center", textfont_size=12)
+    fig_eff.update_layout(
+        plot_bgcolor="white",
+        font=dict(family="Segoe UI", size=13, color="#222"),
+        title=dict(font=dict(size=16, color="#003366")),
+        xaxis=dict(showgrid=True, gridcolor="lightgray"),
+        yaxis=dict(showgrid=True, gridcolor="lightgray"),
+        yaxis_title="Eficiencia (m³ por S/)",
+        xaxis_title="Escenario de redistribución (%)",
+        legend_title="Tipo de cisterna"
+    )
+    st.plotly_chart(fig_eff, use_container_width=True)
 
-    # --- Comparativa directa: Eficiencia promedio por tipo de cisterna ---
+    # --- Gráfico 2: eficiencia promedio por tipo de cisterna ---
     df_prom = df_comp.groupby("Cisterna")["Eficiencia (m³/S/)"].mean().reset_index()
-    fig_bar = px.bar(df_prom, x="Cisterna", y="Eficiencia (m³/S/)",
-                     color="Cisterna", color_discrete_sequence=["#0077b6","#009e73"],
-                     text_auto=True, title="Eficiencia promedio por tipo de cisterna (promedio de los tres escenarios)")
+
+    fig_bar = px.bar(
+        df_prom,
+        x="Cisterna",
+        y="Eficiencia (m³/S/)",
+        color="Cisterna",
+        color_discrete_sequence=["#0077b6", "#009e73"],
+        text_auto=".3f",
+        title="Eficiencia promedio por tipo de cisterna (promedio de los tres escenarios)"
+    )
+
     fig_bar.update_layout(
         plot_bgcolor="white",
         font=dict(family="Segoe UI", size=13, color="#222"),
@@ -365,20 +375,20 @@ st.plotly_chart(fig_eff, use_container_width=True)
     st.plotly_chart(fig_bar, use_container_width=True)
 
     # --- Resumen interpretativo automático ---
-    cisterna_ganadora = df_prom.loc[df_prom["Eficiencia (m³/S/)"].idxmax(),"Cisterna"]
+    cisterna_ganadora = df_prom.loc[df_prom["Eficiencia (m³/S/)"].idxmax(), "Cisterna"]
     eff_max = df_prom["Eficiencia (m³/S/)"].max()
+
     st.markdown(f"""
     <div style='background-color:#f0f9ff; border-left:6px solid #0066cc;
                 padding:12px 20px; margin-top:15px; border-radius:6px;
                 font-size:16px; color:#222; font-family:"Segoe UI", sans-serif;'>
-    <b>📊 Síntesis comparativa:</b><br>
-    En este escenario, la <b>cisterna de {cisterna_ganadora}</b> mostró el mejor desempeño
-    con una eficiencia promedio de <b>{eff_max:.2f} m³/S/</b> considerando los tres niveles de redistribución (10 %, 20 % y 30 %).<br>
-    Esto indica que, bajo condiciones similares, el uso de dicha flota optimiza la relación entre
-    <b>volumen redistribuido y costo operativo</b>, reforzando la capacidad técnica del modelo en este contexto.
+        <b>📊 Síntesis comparativa:</b><br>
+        En este escenario, la <b>cisterna de {cisterna_ganadora}</b> mostró el mejor desempeño,
+        con una eficiencia promedio de <b>{eff_max:.3f} m³/S/</b> considerando los tres niveles de redistribución (10 %, 20 % y 30 %).<br>
+        Esto indica que, bajo condiciones similares, el uso de dicha flota optimiza la relación entre
+        <b>volumen redistribuido y costo operativo</b>, reforzando la capacidad técnica del modelo en este contexto.
     </div>
     """, unsafe_allow_html=True)
-
 
 # ========= DISTRITO =========
 elif modo == "Distrito":
@@ -426,7 +436,7 @@ elif modo == "Distrito":
     st.markdown("## 📈 Análisis comparativo de eficiencia hídrico-económica")
     st.caption("Evaluación del desempeño del modelo frente a distintos escenarios de redistribución y tipos de cisterna.")
 
-    # --- Comparativa entre escenarios ---
+    # --- Comparativa entre escenarios y tipos de cisterna ---
     escenarios = [10, 20, 30]
     tipos_cisterna = ["19 m³", "34 m³"]
     comparacion_total = []
@@ -435,45 +445,54 @@ elif modo == "Distrito":
         for esc in escenarios:
             _, restante_esc, _, costo_esc, _ = asignar_pozos(row.geometry.centroid, demanda, esc, tipo, pozos_gdf)
             eficiencia_esc = ((demanda - restante_esc) / costo_esc) if costo_esc > 0 else 0
-            comparacion_total.append({"Escenario (%)": esc, "Cisterna": tipo, "Eficiencia (m³/S/)": eficiencia_esc})
+            comparacion_total.append({
+                "Escenario (%)": esc,
+                "Cisterna": tipo,
+                "Eficiencia (m³/S/)": eficiencia_esc
+            })
 
     df_comp = pd.DataFrame(comparacion_total)
 
-    # --- Gráfico combinado: Escenario vs Eficiencia (por tipo de cisterna) ---
-    # Redondear valores para etiquetas más limpias
-df_comp["Eficiencia_label"] = df_comp["Eficiencia (m³/S/)"].apply(lambda x: f"{x:.3f}")
+    # --- Gráfico 1: eficiencia por escenario y tipo de cisterna ---
+    df_comp["Eficiencia_label"] = df_comp["Eficiencia (m³/S/)"].apply(lambda x: f"{x:.3f}")
 
-# --- Gráfico de eficiencia por escenario y tipo de cisterna ---
-fig_eff = px.line(
-    df_comp,
-    x="Escenario (%)",
-    y="Eficiencia (m³/S/)",
-    color="Cisterna",
-    markers=True,
-    text="Eficiencia_label",
-    title="Comparación de eficiencia hídrico-económica por escenario y tipo de cisterna",
-    color_discrete_map={"19 m³": "#0077b6", "34 m³": "#009e73"}
-)
+    fig_eff = px.line(
+        df_comp,
+        x="Escenario (%)",
+        y="Eficiencia (m³/S/)",
+        color="Cisterna",
+        markers=True,
+        text="Eficiencia_label",
+        title="Comparación de eficiencia hídrico-económica por escenario y tipo de cisterna",
+        color_discrete_map={"19 m³": "#0077b6", "34 m³": "#009e73"}
+    )
 
-fig_eff.update_traces(textposition="top center", textfont_size=12)
-fig_eff.update_layout(
-    plot_bgcolor="white",
-    font=dict(family="Segoe UI", size=13, color="#222"),
-    title=dict(font=dict(size=16, color="#003366")),
-    xaxis=dict(showgrid=True, gridcolor="lightgray"),
-    yaxis=dict(showgrid=True, gridcolor="lightgray"),
-    yaxis_title="Eficiencia (m³ por S/)",
-    xaxis_title="Escenario de redistribución (%)",
-    legend_title="Tipo de cisterna"
-)
-st.plotly_chart(fig_eff, use_container_width=True)
+    fig_eff.update_traces(textposition="top center", textfont_size=12)
+    fig_eff.update_layout(
+        plot_bgcolor="white",
+        font=dict(family="Segoe UI", size=13, color="#222"),
+        title=dict(font=dict(size=16, color="#003366")),
+        xaxis=dict(showgrid=True, gridcolor="lightgray"),
+        yaxis=dict(showgrid=True, gridcolor="lightgray"),
+        yaxis_title="Eficiencia (m³ por S/)",
+        xaxis_title="Escenario de redistribución (%)",
+        legend_title="Tipo de cisterna"
+    )
+    st.plotly_chart(fig_eff, use_container_width=True)
 
-
-    # --- Comparativa directa: Eficiencia promedio por tipo de cisterna ---
+    # --- Gráfico 2: eficiencia promedio por tipo de cisterna ---
     df_prom = df_comp.groupby("Cisterna")["Eficiencia (m³/S/)"].mean().reset_index()
-    fig_bar = px.bar(df_prom, x="Cisterna", y="Eficiencia (m³/S/)",
-                     color="Cisterna", color_discrete_sequence=["#0077b6","#009e73"],
-                     text_auto=True, title="Eficiencia promedio por tipo de cisterna (promedio de los tres escenarios)")
+
+    fig_bar = px.bar(
+        df_prom,
+        x="Cisterna",
+        y="Eficiencia (m³/S/)",
+        color="Cisterna",
+        color_discrete_sequence=["#0077b6", "#009e73"],
+        text_auto=".3f",
+        title="Eficiencia promedio por tipo de cisterna (promedio de los tres escenarios)"
+    )
+
     fig_bar.update_layout(
         plot_bgcolor="white",
         font=dict(family="Segoe UI", size=13, color="#222"),
@@ -485,20 +504,20 @@ st.plotly_chart(fig_eff, use_container_width=True)
     st.plotly_chart(fig_bar, use_container_width=True)
 
     # --- Resumen interpretativo automático ---
-    cisterna_ganadora = df_prom.loc[df_prom["Eficiencia (m³/S/)"].idxmax(),"Cisterna"]
+    cisterna_ganadora = df_prom.loc[df_prom["Eficiencia (m³/S/)"].idxmax(), "Cisterna"]
     eff_max = df_prom["Eficiencia (m³/S/)"].max()
+
     st.markdown(f"""
     <div style='background-color:#f0f9ff; border-left:6px solid #0066cc;
                 padding:12px 20px; margin-top:15px; border-radius:6px;
                 font-size:16px; color:#222; font-family:"Segoe UI", sans-serif;'>
-    <b>📊 Síntesis comparativa:</b><br>
-    En este escenario, la <b>cisterna de {cisterna_ganadora}</b> mostró el mejor desempeño
-    con una eficiencia promedio de <b>{eff_max:.2f} m³/S/</b> considerando los tres niveles de redistribución (10 %, 20 % y 30 %).<br>
-    Esto indica que, bajo condiciones similares, el uso de dicha flota optimiza la relación entre
-    <b>volumen redistribuido y costo operativo</b>, reforzando la capacidad técnica del modelo en este contexto.
+        <b>📊 Síntesis comparativa:</b><br>
+        En este escenario, la <b>cisterna de {cisterna_ganadora}</b> mostró el mejor desempeño,
+        con una eficiencia promedio de <b>{eff_max:.3f} m³/S/</b> considerando los tres niveles de redistribución (10 %, 20 % y 30 %).<br>
+        Esto indica que, bajo condiciones similares, el uso de dicha flota optimiza la relación entre
+        <b>volumen redistribuido y costo operativo</b>, reforzando la capacidad técnica del modelo en este contexto.
     </div>
     """, unsafe_allow_html=True)
-
 
 # ========= COMBINACIÓN DE DISTRITOS =========
 elif modo == "Combinación Distritos":
