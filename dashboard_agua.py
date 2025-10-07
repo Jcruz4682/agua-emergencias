@@ -555,61 +555,113 @@ elif modo == "Distrito":
 
 # ========= COMBINACIÓN DE DISTRITOS =========
 elif modo == "Combinación Distritos":
-    criticos = ["ATE","LURIGANCHO","SAN_JUAN_DE_LURIGANCHO","EL_AGUSTINO","SANTA_ANITA"]
+    criticos = ["ATE", "LURIGANCHO", "SAN_JUAN_DE_LURIGANCHO", "EL_AGUSTINO", "SANTA_ANITA"]
     seleccion = st.sidebar.multiselect("Seleccionar combinación de distritos", criticos, default=criticos)
+
     if seleccion:
         rows = distritos_gdf[distritos_gdf["NOMBDIST"].isin(seleccion)]
         demanda = rows["Demanda_Distrito_m3_30_lhd"].sum()
         geom_union = unary_union(rows.geometry)
-        resultados, restante, viajes, costo, consumo = asignar_pozos(geom_union.centroid, demanda, escenario_sel, cisterna_sel, pozos_gdf)
+        resultados, restante, viajes, costo, consumo = asignar_pozos(
+            geom_union.centroid, demanda, escenario_sel, cisterna_sel, pozos_gdf
+        )
 
         # --- Contexto descriptivo adaptado ---
-if modo == "Sector":
-    nivel_texto = "Por sector"
-elif modo == "Distrito":
-    nivel_texto = "Por distrito"
-elif modo == "Combinación Distritos":
-    nivel_texto = "Por combinación de distritos"
-else:
-    nivel_texto = "Resumen general"
+        if modo == "Sector":
+            nivel_texto = "Por sector"
+        elif modo == "Distrito":
+            nivel_texto = "Por distrito"
+        elif modo == "Combinación Distritos":
+            nivel_texto = "Por combinación de distritos"
+        else:
+            nivel_texto = "Resumen general"
 
-st.markdown(
-    f"### 🧩 Contexto: Escenario {escenario_sel}% – Cisterna {cisterna_sel} – Nivel: {nivel_texto}"
-)
-        mostrar_kpis(f"🌀 Combinación: {', '.join(seleccion)}", demanda, restante, viajes, costo, consumo, resultados)
+        st.markdown(
+            f"### 🧩 Contexto: Escenario {escenario_sel}% – Cisterna {cisterna_sel} – Nivel: {nivel_texto}"
+        )
 
+        # --- Mostrar KPIs ---
+        mostrar_kpis(
+            f"🌀 Combinación: {', '.join(seleccion)}",
+            demanda, restante, viajes, costo, consumo, resultados
+        )
+
+        # --- Tabla de resultados ---
         st.markdown("### 📘 Resultados por pozo")
         st.caption("Pozos industriales utilizados para la combinación crítica de distritos.")
-        df_res = pd.DataFrame(resultados, columns=["Pozo_ID","Aporte","Viajes","Costo","Consumo","Dist_km","geom"]).drop(columns="geom")
+        df_res = pd.DataFrame(
+            resultados,
+            columns=["Pozo_ID", "Aporte", "Viajes", "Costo", "Consumo", "Dist_km", "geom"]
+        ).drop(columns="geom")
         df_res = rename_columns(df_res)
-        styled_df = df_res.style.background_gradient(subset=["Aporte (m³/día)"], cmap="YlGnBu").format({
-    "Aporte (m³/día)": "{:,.2f}",
-    "Costo (Soles)": "{:,.2f}",
-    "Consumo (galones)": "{:,.1f}",
-    "Distancia (km)": "{:,.2f}"
-})
+        styled_df = (
+            df_res.style
+            .background_gradient(subset=["Aporte (m³/día)"], cmap="YlGnBu")
+            .format({
+                "Aporte (m³/día)": "{:,.2f}",
+                "Costo (Soles)": "{:,.2f}",
+                "Consumo (galones)": "{:,.1f}",
+                "Distancia (km)": "{:,.2f}"
+            })
+        )
         st.dataframe(styled_df, use_container_width=True)
 
+        # --- Gráfico del aporte ---
         st.markdown("### 📊 Distribución del aporte por pozo")
         st.caption("Aporte total por pozo a la combinación crítica.")
         st.plotly_chart(
-            plot_bar(df_res, x="N° Pozo", y="Aporte (m³/día)",
-                     title="Aporte por pozo industrial", xlabel="N° Pozo", ylabel="Aporte (m³/día)"),
+            plot_bar(
+                df_res,
+                x="N° Pozo",
+                y="Aporte (m³/día)",
+                title="Aporte por pozo industrial",
+                xlabel="N° Pozo",
+                ylabel="Aporte (m³/día)"
+            ),
             use_container_width=True
         )
 
+        # --- Mapa y capa de calor ---
         st.markdown("### 🗺️ Distribución espacial")
         show_heat = st.checkbox("Mostrar mapa de calor por costo (S/)", value=False, key="heat_comb")
-        m = folium.Map(location=[geom_union.centroid.y, geom_union.centroid.x], zoom_start=10, tiles="cartodbpositron")
-        folium.GeoJson(geom_union, style_function=lambda x: {"color":"purple","fillOpacity":0.2}).add_to(m)
+        m = folium.Map(
+            location=[geom_union.centroid.y, geom_union.centroid.x],
+            zoom_start=10,
+            tiles="cartodbpositron"
+        )
+        folium.GeoJson(geom_union, style_function=lambda x: {"color": "purple", "fillOpacity": 0.2}).add_to(m)
         m = dibujar_pozos(resultados, m)
         if show_heat and len(resultados) > 0:
             heat_data = [[r[6].y, r[6].x, r[3]] for r in resultados if r[6] is not None]
-            plugins.HeatMap(heat_data, radius=18).add_to(m)
+            plugins.HeatMap(heat_data, radius=18, blur=25, max_zoom=10).add_to(m)
+
+            # Leyenda del mapa de calor
+            legend_heat = """
+            <div style="position: fixed; bottom: 20px; right: 20px; width: 210px;
+                        background-color: white; border:2px solid #666; z-index:9999;
+                        font-size:14px; padding:10px; border-radius:8px;">
+                <b>Mapa de calor – Costo operativo (S/)</b><br>
+                <span style="color:#ff0000;">●</span> Mayor costo<br>
+                <span style="color:#ffcc00;">●</span> Costo medio<br>
+                <span style="color:#00cc00;">●</span> Menor costo
+            </div>
+            """
+            m.get_root().html.add_child(folium.Element(legend_heat))
+
         m = agregar_leyenda(m)
         st_folium(m, width=900, height=500)
 
-        agregar_conclusion("combinación crítica de distritos", ", ".join(seleccion), demanda, restante, viajes, costo, consumo, resultados)
+        # --- Conclusión ---
+        agregar_conclusion(
+            "combinación crítica de distritos",
+            ", ".join(seleccion),
+            demanda,
+            restante,
+            viajes,
+            costo,
+            consumo,
+            resultados
+        )
 
 # ========= RESUMEN GENERAL (TABS + TOP5) =========
 elif modo == "Resumen general":
