@@ -9,10 +9,17 @@ import os
 import pandas as pd
 import geopandas as gpd
 import folium
-from folium import plugins
 from shapely.ops import unary_union
 from streamlit_folium import st_folium
 import plotly.express as px
+from folium import plugins
+
+# --- CONFIGURACIÓN DE PÁGINA ---
+st.set_page_config(
+    page_title="Modelo de redistribución de agua",
+    page_icon="💧",
+    layout="wide"  # 👈 Modo de ancho completo
+)
 
 # --- LOGIN SIMPLE ---
 USERS = {"jurado1": "clave123", "jurado2": "clave456"}
@@ -29,9 +36,22 @@ if not st.session_state["auth"]:
         else:
             st.error("Credenciales inválidas")
     st.stop()
-    
-# ✅ Configuración general de la página
-st.set_page_config(layout="wide")
+
+# --- ENCABEZADO PRINCIPAL ---
+st.markdown(
+    """
+    <div style="text-align: center; margin-top: -40px;">
+        <h1 style="color:#003366; font-size:28px; font-family:'Segoe UI',sans-serif; text-transform:uppercase;">
+            MODELO TÉCNICO-OPERATIVO DE REDISTRIBUCIÓN TEMPORAL DE USO DE AGUA INDUSTRIAL PARA EMERGENCIAS HÍDRICAS
+        </h1>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
+# --- ESPACIO VISUAL ---
+st.markdown("<br>", unsafe_allow_html=True)
+
 
 # --- TITULO PRINCIPAL ---
 st.markdown(
