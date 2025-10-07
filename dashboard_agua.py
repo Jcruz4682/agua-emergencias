@@ -660,7 +660,6 @@ elif modo == "Combinación Distritos":
             resultados
         )
 
-# ========= RESUMEN GENERAL (TABS + TOP5) =========
 elif modo == "Resumen general":
     st.subheader("📊 Resumen general")
     tabs = st.tabs(["📍 Sectores", "🏙️ Distritos", "🌀 Combinación crítica", "🏆 Top 5"])
@@ -669,19 +668,30 @@ elif modo == "Resumen general":
     with tabs[0]:
         resumen_sectores = []
         for _, r in sectores_gdf.iterrows():
-            dem = float(r.get("Demanda_m3_dia",0))
+            dem = float(r.get("Demanda_m3_dia", 0))
             if dem > 0:
                 _, rest, via, cos, con = asignar_pozos(r.geometry.centroid, dem, escenario_sel, cisterna_sel, pozos_gdf)
-                cobertura = (1-rest/dem)*100 if dem>0 else 0
+                cobertura = (1 - rest / dem) * 100 if dem > 0 else 0
                 resumen_sectores.append([r["ZONENAME"], dem, via, cos, con, rest, cobertura])
-        df_sec = pd.DataFrame(resumen_sectores, columns=["Sector","Demanda","Viajes","Costo","Consumo","Faltante","Cobertura_%"])
+
+        df_sec = pd.DataFrame(
+            resumen_sectores,
+            columns=["Sector", "Demanda", "Viajes", "Costo", "Consumo", "Faltante", "Cobertura_%"]
+        )
         df_sec = rename_columns(df_sec)
 
         st.markdown("### 📍 Sectores")
         st.caption("Resumen por sector del costo y cobertura en el escenario seleccionado.")
-        st.dataframe(df_sec.style.background_gradient(subset=["Costo (Soles)"], cmap="Purples").format({
-            "Demanda (m³/día)":"{:,.2f}", "Costo (Soles)":"{:,.2f}", "Consumo (galones)":"{:,.2f}", "Faltante (m³/día)":"{:,.2f}"
-        }), use_container_width=True)
+        st.dataframe(
+            df_sec.style.background_gradient(subset=["Costo (Soles)"], cmap="Purples").format({
+                "Demanda (m³/día)": "{:,.2f}",
+                "Costo (Soles)": "{:,.2f}",
+                "Consumo (galones)": "{:,.1f}",
+                "Faltante (m³/día)": "{:,.2f}",
+                "Cobertura (%)": "{:,.2f}"
+            }),
+            use_container_width=True
+        )
         st.plotly_chart(
             plot_bar(df_sec, x="Sector", y="Costo (Soles)",
                      title="Costo por sector", xlabel="Sector", ylabel="Costo (S/)"),
@@ -693,214 +703,201 @@ elif modo == "Resumen general":
     with tabs[1]:
         resumen_distritos = []
         for _, r in distritos_gdf.iterrows():
-            dem = float(r.get("Demanda_Distrito_m3_30_lhd",0))
+            dem = float(r.get("Demanda_Distrito_m3_30_lhd", 0))
             if dem > 0:
                 _, rest, via, cos, con = asignar_pozos(r.geometry.centroid, dem, escenario_sel, cisterna_sel, pozos_gdf)
-                cobertura = (1-rest/dem)*100 if dem>0 else 0
+                cobertura = (1 - rest / dem) * 100 if dem > 0 else 0
                 resumen_distritos.append([r["NOMBDIST"], dem, via, cos, con, rest, cobertura])
-        df_dis = pd.DataFrame(resumen_distritos, columns=["Distrito","Demanda","Viajes","Costo","Consumo","Faltante","Cobertura_%"])
+
+        df_dis = pd.DataFrame(
+            resumen_distritos,
+            columns=["Distrito", "Demanda", "Viajes", "Costo", "Consumo", "Faltante", "Cobertura_%"]
+        )
         df_dis = rename_columns(df_dis)
 
         st.markdown("### 🏙️ Distritos")
         st.caption("Resumen por distrito del costo y cobertura en el escenario seleccionado.")
-        st.dataframe(df_dis.style.background_gradient(subset=["Costo (Soles)"], cmap="Purples").format({
-            "Demanda (m³/día)":"{:,.2f}", "Costo (Soles)":"{:,.2f}", "Consumo (galones)":"{:,.2f}", "Faltante (m³/día)":"{:,.2f}"
-        }), use_container_width=True)
+        st.dataframe(
+            df_dis.style.background_gradient(subset=["Costo (Soles)"], cmap="Purples").format({
+                "Demanda (m³/día)": "{:,.2f}",
+                "Costo (Soles)": "{:,.2f}",
+                "Consumo (galones)": "{:,.1f}",
+                "Faltante (m³/día)": "{:,.2f}",
+                "Cobertura (%)": "{:,.2f}"
+            }),
+            use_container_width=True
+        )
         st.plotly_chart(
             plot_bar(df_dis, x="Distrito", y="Costo (Soles)",
                      title="Costo por distrito", xlabel="Distrito", ylabel="Costo (S/)"),
             use_container_width=True
         )
-        st.caption(f"➡️ Cobertura promedio general: {df_dis['Cobertura (%)'].mean():.1f}%")
+        st.caption(f"🌎 Cobertura promedio general: {df_dis['Cobertura (%)'].mean():.2f}%")
 
     # ============== COMBINACIÓN CRÍTICA ==============
     with tabs[2]:
-        criticos = ["ATE","LURIGANCHO","SAN_JUAN_DE_LURIGANCHO","EL_AGUSTINO","SANTA_ANITA"]
+        criticos = ["ATE", "LURIGANCHO", "SAN_JUAN_DE_LURIGANCHO", "EL_AGUSTINO", "SANTA_ANITA"]
         filas = distritos_gdf[distritos_gdf["NOMBDIST"].isin(criticos)]
         demanda = filas["Demanda_Distrito_m3_30_lhd"].sum()
-        _, restante, viajes, costo, consumo = asignar_pozos(unary_union(filas.geometry).centroid, demanda, escenario_sel, cisterna_sel, pozos_gdf)
+        _, restante, viajes, costo, consumo = asignar_pozos(
+            unary_union(filas.geometry).centroid, demanda, escenario_sel, cisterna_sel, pozos_gdf
+        )
+
         st.markdown("### 🌀 Combinación crítica de distritos")
         df_comb = pd.DataFrame({
             "Distrito": criticos,
             "Demanda (m³/día)": [
-                filas.loc[filas["NOMBDIST"]==d,"Demanda_Distrito_m3_30_lhd"].values[0]
+                filas.loc[filas["NOMBDIST"] == d, "Demanda_Distrito_m3_30_lhd"].values[0]
                 for d in criticos if d in filas["NOMBDIST"].values
             ]
         })
-        st.dataframe(df_comb.style.background_gradient(subset=["Demanda (m³/día)"], cmap="YlGnBu"),
-                     use_container_width=True)
+        st.dataframe(
+            df_comb.style.background_gradient(subset=["Demanda (m³/día)"], cmap="YlGnBu").format({
+                "Demanda (m³/día)": "{:,.2f}"
+            }),
+            use_container_width=True
+        )
         st.plotly_chart(
             plot_bar(df_comb, x="Distrito", y="Demanda (m³/día)",
                      title="Demanda total en distritos críticos",
                      xlabel="Distrito", ylabel="Demanda (m³/día)"),
             use_container_width=True
         )
-        agregar_conclusion("combinación crítica de distritos", ", ".join(criticos), demanda, restante, viajes, costo, consumo, [])
+        agregar_conclusion("combinación crítica de distritos",
+                           ", ".join(criticos), demanda, restante, viajes, costo, consumo, [])
 
     # ============== TOP 5 ==============
-with tabs[3]:
-    st.markdown("### 🏆 Rankings operativos (costos)")
-    colA, colB = st.columns(2)
+    with tabs[3]:
+        st.markdown("### 🏆 Rankings operativos (costos)")
+        colA, colB = st.columns(2)
 
-    # Asegurar que df_sec y df_dis existan si el usuario no entró a las otras tabs antes
-    if 'df_sec' not in locals():
-        resumen_sectores = []
-        for _, r in sectores_gdf.iterrows():
-            dem = float(r.get("Demanda_m3_dia", 0))
-            if dem > 0:
-                _, rest, via, cos, con = asignar_pozos(r.geometry.centroid, dem, escenario_sel, cisterna_sel, pozos_gdf)
-                cobertura = (1 - rest / dem) * 100 if dem > 0 else 0
-                resumen_sectores.append([r["ZONENAME"], dem, via, cos, con, rest, cobertura])
-        df_sec = rename_columns(
-            pd.DataFrame(resumen_sectores,
-                         columns=["Sector", "Demanda", "Viajes", "Costo", "Consumo", "Faltante", "Cobertura_%"])
-        )
+        # --- Asegurar que existan los dataframes ---
+        if 'df_sec' not in locals():
+            resumen_sectores = []
+            for _, r in sectores_gdf.iterrows():
+                dem = float(r.get("Demanda_m3_dia", 0))
+                if dem > 0:
+                    _, rest, via, cos, con = asignar_pozos(r.geometry.centroid, dem, escenario_sel, cisterna_sel, pozos_gdf)
+                    cobertura = (1 - rest / dem) * 100 if dem > 0 else 0
+                    resumen_sectores.append([r["ZONENAME"], dem, via, cos, con, rest, cobertura])
+            df_sec = rename_columns(pd.DataFrame(resumen_sectores,
+                          columns=["Sector", "Demanda", "Viajes", "Costo", "Consumo", "Faltante", "Cobertura_%"]))
 
-    if 'df_dis' not in locals():
-        resumen_distritos = []
-        for _, r in distritos_gdf.iterrows():
-            dem = float(r.get("Demanda_Distrito_m3_30_lhd", 0))
-            if dem > 0:
-                _, rest, via, cos, con = asignar_pozos(r.geometry.centroid, dem, escenario_sel, cisterna_sel, pozos_gdf)
-                cobertura = (1 - rest / dem) * 100 if dem > 0 else 0
-                resumen_distritos.append([r["NOMBDIST"], dem, via, cos, con, rest, cobertura])
-        df_dis = rename_columns(
-            pd.DataFrame(resumen_distritos,
-                         columns=["Distrito", "Demanda", "Viajes", "Costo", "Consumo", "Faltante", "Cobertura_%"])
-        )
+        if 'df_dis' not in locals():
+            resumen_distritos = []
+            for _, r in distritos_gdf.iterrows():
+                dem = float(r.get("Demanda_Distrito_m3_30_lhd", 0))
+                if dem > 0:
+                    _, rest, via, cos, con = asignar_pozos(r.geometry.centroid, dem, escenario_sel, cisterna_sel, pozos_gdf)
+                    cobertura = (1 - rest / dem) * 100 if dem > 0 else 0
+                    resumen_distritos.append([r["NOMBDIST"], dem, via, cos, con, rest, cobertura])
+            df_dis = rename_columns(pd.DataFrame(resumen_distritos,
+                          columns=["Distrito", "Demanda", "Viajes", "Costo", "Consumo", "Faltante", "Cobertura_%"]))
 
-    # ========== TOP 5 SECTORES ==========
-    with colA:
-        st.markdown("#### 💰 Sectores más costosos (Top 5)")
-        top5_cost_sect = df_sec.nlargest(5, "Costo (Soles)")
-        st.dataframe(
-            top5_cost_sect.style.background_gradient(subset=["Costo (Soles)"], cmap="Reds").format({
-                "Demanda (m³/día)": "{:,.2f}",
-                "Costo (Soles)": "{:,.2f}",
-                "Consumo (galones)": "{:,.1f}",
-                "Faltante (m³/día)": "{:,.2f}",
-                "Cobertura (%)": "{:,.2f}"
-            }),
-            use_container_width=True
-        )
-        st.plotly_chart(
-            px.bar(
-                top5_cost_sect,
-                x="Sector",
-                y="Costo (Soles)",
-                color="Costo (Soles)",
-                color_continuous_scale="Reds",
-                text_auto=".2f",
-                title="Top 5 sectores con mayor costo"
-            ).update_layout(
-                xaxis_title="Sector",
-                yaxis_title="Costo (S/)",
-                plot_bgcolor="white",
-                font=dict(family="Segoe UI", size=13, color="#222"),
-                title=dict(font=dict(size=16, color="#003366")),
-                xaxis=dict(showgrid=True, gridcolor="lightgray"),
-                yaxis=dict(showgrid=True, gridcolor="lightgray")
-            ),
-            use_container_width=True
-        )
+        # --- TOP 5 SECTORES ---
+        with colA:
+            st.markdown("#### 💰 Sectores más costosos (Top 5)")
+            top5_cost_sect = df_sec.nlargest(5, "Costo (Soles)")
+            st.dataframe(
+                top5_cost_sect.style.background_gradient(subset=["Costo (Soles)"], cmap="Reds").format({
+                    "Demanda (m³/día)": "{:,.2f}",
+                    "Costo (Soles)": "{:,.2f}",
+                    "Consumo (galones)": "{:,.1f}",
+                    "Faltante (m³/día)": "{:,.2f}",
+                    "Cobertura (%)": "{:,.2f}"
+                }),
+                use_container_width=True
+            )
+            st.plotly_chart(
+                px.bar(top5_cost_sect, x="Sector", y="Costo (Soles)", color="Costo (Soles)",
+                       color_continuous_scale="Reds", text_auto=".2f",
+                       title="Top 5 sectores con mayor costo").update_layout(
+                           xaxis_title="Sector", yaxis_title="Costo (S/)",
+                           plot_bgcolor="white",
+                           font=dict(family="Segoe UI", size=13, color="#222"),
+                           title=dict(font=dict(size=16, color="#003366")),
+                           xaxis=dict(showgrid=True, gridcolor="lightgray"),
+                           yaxis=dict(showgrid=True, gridcolor="lightgray")
+                       ),
+                use_container_width=True
+            )
 
-        st.markdown("#### 💧 Sectores más económicos (Top 5)")
-        top5_cheap_sect = df_sec.nsmallest(5, "Costo (Soles)")
-        st.dataframe(
-            top5_cheap_sect.style.background_gradient(subset=["Costo (Soles)"], cmap="Blues").format({
-                "Demanda (m³/día)": "{:,.2f}",
-                "Costo (Soles)": "{:,.2f}",
-                "Consumo (galones)": "{:,.1f}",
-                "Faltante (m³/día)": "{:,.2f}",
-                "Cobertura (%)": "{:,.2f}"
-            }),
-            use_container_width=True
-        )
-        st.plotly_chart(
-            px.bar(
-                top5_cheap_sect,
-                x="Sector",
-                y="Costo (Soles)",
-                color="Costo (Soles)",
-                color_continuous_scale="Blues",
-                text_auto=".2f",
-                title="Top 5 sectores con menor costo"
-            ).update_layout(
-                xaxis_title="Sector",
-                yaxis_title="Costo (S/)",
-                plot_bgcolor="white",
-                font=dict(family="Segoe UI", size=13, color="#222"),
-                title=dict(font=dict(size=16, color="#003366")),
-                xaxis=dict(showgrid=True, gridcolor="lightgray"),
-                yaxis=dict(showgrid=True, gridcolor="lightgray")
-            ),
-            use_container_width=True
-        )
+            st.markdown("#### 💧 Sectores más económicos (Top 5)")
+            top5_cheap_sect = df_sec.nsmallest(5, "Costo (Soles)")
+            st.dataframe(
+                top5_cheap_sect.style.background_gradient(subset=["Costo (Soles)"], cmap="Blues").format({
+                    "Demanda (m³/día)": "{:,.2f}",
+                    "Costo (Soles)": "{:,.2f}",
+                    "Consumo (galones)": "{:,.1f}",
+                    "Faltante (m³/día)": "{:,.2f}",
+                    "Cobertura (%)": "{:,.2f}"
+                }),
+                use_container_width=True
+            )
+            st.plotly_chart(
+                px.bar(top5_cheap_sect, x="Sector", y="Costo (Soles)", color="Costo (Soles)",
+                       color_continuous_scale="Blues", text_auto=".2f",
+                       title="Top 5 sectores con menor costo").update_layout(
+                           xaxis_title="Sector", yaxis_title="Costo (S/)",
+                           plot_bgcolor="white",
+                           font=dict(family="Segoe UI", size=13, color="#222"),
+                           title=dict(font=dict(size=16, color="#003366")),
+                           xaxis=dict(showgrid=True, gridcolor="lightgray"),
+                           yaxis=dict(showgrid=True, gridcolor="lightgray")
+                       ),
+                use_container_width=True
+            )
 
-    # ========== TOP 5 DISTRITOS ==========
-    with colB:
-        st.markdown("#### 🏙️ Distritos más costosos (Top 5)")
-        top5_cost_dis = df_dis.nlargest(5, "Costo (Soles)")
-        st.dataframe(
-            top5_cost_dis.style.background_gradient(subset=["Costo (Soles)"], cmap="Reds").format({
-                "Demanda (m³/día)": "{:,.2f}",
-                "Costo (Soles)": "{:,.2f}",
-                "Consumo (galones)": "{:,.1f}",
-                "Faltante (m³/día)": "{:,.2f}",
-                "Cobertura (%)": "{:,.2f}"
-            }),
-            use_container_width=True
-        )
-        st.plotly_chart(
-            px.bar(
-                top5_cost_dis,
-                x="Distrito",
-                y="Costo (Soles)",
-                color="Costo (Soles)",
-                color_continuous_scale="Reds",
-                text_auto=".2f",
-                title="Top 5 distritos con mayor costo"
-            ).update_layout(
-                xaxis_title="Distrito",
-                yaxis_title="Costo (S/)",
-                plot_bgcolor="white",
-                font=dict(family="Segoe UI", size=13, color="#222"),
-                title=dict(font=dict(size=16, color="#003366")),
-                xaxis=dict(showgrid=True, gridcolor="lightgray"),
-                yaxis=dict(showgrid=True, gridcolor="lightgray")
-            ),
-            use_container_width=True
-        )
+        # --- TOP 5 DISTRITOS ---
+        with colB:
+            st.markdown("#### 🏙️ Distritos más costosos (Top 5)")
+            top5_cost_dis = df_dis.nlargest(5, "Costo (Soles)")
+            st.dataframe(
+                top5_cost_dis.style.background_gradient(subset=["Costo (Soles)"], cmap="Reds").format({
+                    "Demanda (m³/día)": "{:,.2f}",
+                    "Costo (Soles)": "{:,.2f}",
+                    "Consumo (galones)": "{:,.1f}",
+                    "Faltante (m³/día)": "{:,.2f}",
+                    "Cobertura (%)": "{:,.2f}"
+                }),
+                use_container_width=True
+            )
+            st.plotly_chart(
+                px.bar(top5_cost_dis, x="Distrito", y="Costo (Soles)", color="Costo (Soles)",
+                       color_continuous_scale="Reds", text_auto=".2f",
+                       title="Top 5 distritos con mayor costo").update_layout(
+                           xaxis_title="Distrito", yaxis_title="Costo (S/)",
+                           plot_bgcolor="white",
+                           font=dict(family="Segoe UI", size=13, color="#222"),
+                           title=dict(font=dict(size=16, color="#003366")),
+                           xaxis=dict(showgrid=True, gridcolor="lightgray"),
+                           yaxis=dict(showgrid=True, gridcolor="lightgray")
+                       ),
+                use_container_width=True
+            )
 
-        st.markdown("#### 🌿 Distritos más económicos (Top 5)")
-        top5_cheap_dis = df_dis.nsmallest(5, "Costo (Soles)")
-        st.dataframe(
-            top5_cheap_dis.style.background_gradient(subset=["Costo (Soles)"], cmap="Blues").format({
-                "Demanda (m³/día)": "{:,.2f}",
-                "Costo (Soles)": "{:,.2f}",
-                "Consumo (galones)": "{:,.1f}",
-                "Faltante (m³/día)": "{:,.2f}",
-                "Cobertura (%)": "{:,.2f}"
-            }),
-            use_container_width=True
-        )
-        st.plotly_chart(
-            px.bar(
-                top5_cheap_dis,
-                x="Distrito",
-                y="Costo (Soles)",
-                color="Costo (Soles)",
-                color_continuous_scale="Blues",
-                text_auto=".2f",
-                title="Top 5 distritos con menor costo"
-            ).update_layout(
-                xaxis_title="Distrito",
-                yaxis_title="Costo (S/)",
-                plot_bgcolor="white",
-                font=dict(family="Segoe UI", size=13, color="#222"),
-                title=dict(font=dict(size=16, color="#003366")),
-                xaxis=dict(showgrid=True, gridcolor="lightgray"),
-                yaxis=dict(showgrid=True, gridcolor="lightgray")
-            ),
-            use_container_width=True
-        )
+            st.markdown("#### 🌿 Distritos más económicos (Top 5)")
+            top5_cheap_dis = df_dis.nsmallest(5, "Costo (Soles)")
+            st.dataframe(
+                top5_cheap_dis.style.background_gradient(subset=["Costo (Soles)"], cmap="Blues").format({
+                    "Demanda (m³/día)": "{:,.2f}",
+                    "Costo (Soles)": "{:,.2f}",
+                    "Consumo (galones)": "{:,.1f}",
+                    "Faltante (m³/día)": "{:,.2f}",
+                    "Cobertura (%)": "{:,.2f}"
+                }),
+                use_container_width=True
+            )
+            st.plotly_chart(
+                px.bar(top5_cheap_dis, x="Distrito", y="Costo (Soles)", color="Costo (Soles)",
+                       color_continuous_scale="Blues", text_auto=".2f",
+                       title="Top 5 distritos con menor costo").update_layout(
+                           xaxis_title="Distrito", yaxis_title="Costo (S/)",
+                           plot_bgcolor="white",
+                           font=dict(family="Segoe UI", size=13, color="#222"),
+                           title=dict(font=dict(size=16, color="#003366")),
+                           xaxis=dict(showgrid=True, gridcolor="lightgray"),
+                           yaxis=dict(showgrid=True, gridcolor="lightgray")
+                       ),
+                use_container_width=True
+            )
