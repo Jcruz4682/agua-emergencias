@@ -270,8 +270,22 @@ if modo == "Sector":
     folium.GeoJson(row.geometry, style_function=lambda x: {"color":"red","fillOpacity":0.3}).add_to(m)
     m = dibujar_pozos(resultados, m)
     if show_heat and len(resultados) > 0:
-        heat_data = [[r[6].y, r[6].x, r[3]] for r in resultados if r[6] is not None]  # lat, lon, costo
-        plugins.HeatMap(heat_data, radius=18).add_to(m)
+    heat_data = [[r[6].y, r[6].x, r[3]] for r in resultados if r[6] is not None]
+    plugins.HeatMap(heat_data, radius=18, blur=25, max_zoom=10).add_to(m)
+
+    # Leyenda específica para el mapa de calor
+    legend_heat = """
+    <div style="position: fixed; bottom: 20px; right: 20px; width: 210px;
+                background-color: white; border:2px solid #666; z-index:9999;
+                font-size:14px; padding:10px; border-radius:8px;">
+        <b>Mapa de calor – Costo operativo (S/)</b><br>
+        <span style="color:#ff0000;">●</span> Mayor costo<br>
+        <span style="color:#ffcc00;">●</span> Costo medio<br>
+        <span style="color:#00cc00;">●</span> Menor costo
+    </div>
+    """
+    m.get_root().html.add_child(folium.Element(legend_heat))
+
     m = agregar_leyenda(m)
     st_folium(m, width=900, height=500)
 
@@ -297,8 +311,26 @@ if modo == "Sector":
     df_comp = pd.DataFrame(comparacion_total)
 
     # --- Gráfico combinado: Escenario vs Eficiencia (por tipo de cisterna) ---
-    fig_eff = px.line(df_comp, x="Escenario (%)", y="Eficiencia (m³/S/)", color="Cisterna",
-                      markers=True, text="Eficiencia (m³/S/)",
+    # Redondear valores para etiquetas más limpias
+df_comp["Eficiencia_label"] = df_comp["Eficiencia (m³/S/)"].apply(lambda x: f"{x:.3f}")
+
+fig_eff = px.line(df_comp, x="Escenario (%)", y="Eficiencia (m³/S/)", color="Cisterna",
+                  markers=True, text="Eficiencia_label",
+                  title="Comparación de eficiencia hídrico-económica por escenario y tipo de cisterna",
+                  color_discrete_map={"19 m³":"#0077b6", "34 m³":"#009e73"})
+
+fig_eff.update_traces(textposition="top center", textfont_size=12)
+fig_eff.update_layout(
+    plot_bgcolor="white",
+    font=dict(family="Segoe UI", size=13, color="#222"),
+    title=dict(font=dict(size=16, color="#003366")),
+    xaxis=dict(showgrid=True, gridcolor="lightgray"),
+    yaxis=dict(showgrid=True, gridcolor="lightgray"),
+    yaxis_title="Eficiencia (m³ por S/)",
+    xaxis_title="Escenario de redistribución (%)",
+    legend_title="Tipo de cisterna"
+)
+
                       title="Comparación de eficiencia hídrico-económica por escenario y tipo de cisterna",
                       color_discrete_map={"19 m³":"#0077b6", "34 m³":"#009e73"})
     fig_eff.update_traces(textposition="top center")
@@ -405,8 +437,26 @@ elif modo == "Distrito":
     df_comp = pd.DataFrame(comparacion_total)
 
     # --- Gráfico combinado: Escenario vs Eficiencia (por tipo de cisterna) ---
-    fig_eff = px.line(df_comp, x="Escenario (%)", y="Eficiencia (m³/S/)", color="Cisterna",
-                      markers=True, text="Eficiencia (m³/S/)",
+    # Redondear valores para etiquetas más limpias
+df_comp["Eficiencia_label"] = df_comp["Eficiencia (m³/S/)"].apply(lambda x: f"{x:.3f}")
+
+fig_eff = px.line(df_comp, x="Escenario (%)", y="Eficiencia (m³/S/)", color="Cisterna",
+                  markers=True, text="Eficiencia_label",
+                  title="Comparación de eficiencia hídrico-económica por escenario y tipo de cisterna",
+                  color_discrete_map={"19 m³":"#0077b6", "34 m³":"#009e73"})
+
+fig_eff.update_traces(textposition="top center", textfont_size=12)
+fig_eff.update_layout(
+    plot_bgcolor="white",
+    font=dict(family="Segoe UI", size=13, color="#222"),
+    title=dict(font=dict(size=16, color="#003366")),
+    xaxis=dict(showgrid=True, gridcolor="lightgray"),
+    yaxis=dict(showgrid=True, gridcolor="lightgray"),
+    yaxis_title="Eficiencia (m³ por S/)",
+    xaxis_title="Escenario de redistribución (%)",
+    legend_title="Tipo de cisterna"
+)
+
                       title="Comparación de eficiencia hídrico-económica por escenario y tipo de cisterna",
                       color_discrete_map={"19 m³":"#0077b6", "34 m³":"#009e73"})
     fig_eff.update_traces(textposition="top center")
