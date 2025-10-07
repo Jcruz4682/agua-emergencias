@@ -166,16 +166,70 @@ def mostrar_kpis(nombre, demanda, restante, viajes, costo, consumo, resultados):
     st.caption("⚠️ Los costos presentados corresponden únicamente al consumo de combustible.")
 
 def agregar_conclusion(contexto, nombre, demanda, restante, viajes, costo, consumo, pozos):
-    if restante > 0:
-        st.error(f"**Conclusión:** En **emergencia hídrica en el {contexto.lower()} {nombre}**, "
-                 f"demanda **{demanda:.2f} m³/día**. Faltan **{restante:.2f} m³/día**. "
-                 f"Se emplean **{len(pozos)} pozos**, con **{viajes} viajes**, "
-                 f"**{consumo:.1f} gal** y **S/ {costo:,.2f}** en combustible.")
+    cobertura = (1 - restante / demanda) * 100 if demanda > 0 else 0
+    cobertura_texto = f"{cobertura:.1f}%"
+
+    # Texto base
+    base_texto = (
+        f"En escenario de <b>emergencia hídrica</b> en el <b>{contexto.lower()} {nombre}</b>, "
+        f"la demanda diaria (<b>{demanda:.2f} m³</b>) "
+    )
+
+    # Caso 1: Demanda satisfecha
+    if restante <= 0 or cobertura >= 99.9:
+        texto = (
+            base_texto +
+            f"fue <b>totalmente satisfecha ({cobertura_texto})</b> con el aporte de "
+            f"<b>{len(pozos)} pozos industriales</b>, requiriendo <b>{viajes} viajes</b> "
+            f"con <b>cisternas de {cisterna_sel}</b>.<br>"
+            f"El traslado implicó un <b>consumo de {consumo:.1f} gal</b> de combustible, "
+            f"equivalente a <b>S/ {costo:,.2f}</b> en costos operativos."
+        )
+
+        color = "#e8f5e9"  # verde claro
+        borde = "#2e7d32"  # verde intenso
+        icono = "✅"
+
+    # Caso 2: Demanda no satisfecha
     else:
-        st.success(f"**Conclusión:** En **emergencia hídrica en el {contexto.lower()} {nombre}**, "
-                   f"demanda **{demanda:.2f} m³/día**. Se cubre al 100%. "
-                   f"**{len(pozos)} pozos**, **{viajes} viajes**, "
-                   f"**{consumo:.1f} gal** y **S/ {costo:,.2f}** en combustible.")
+        texto = (
+            base_texto +
+            f"<b>no fue satisfecha en su totalidad ({cobertura_texto})</b>, "
+            f"a pesar del aporte de <b>{len(pozos)} pozos industriales</b>, que requirieron "
+            f"<b>{viajes} viajes</b> con <b>cisternas de {cisterna_sel}</b>.<br>"
+            f"El traslado implicó un <b>consumo de {consumo:.1f} gal</b> de combustible, "
+            f"equivalente a <b>S/ {costo:,.2f}</b> en costos operativos."
+        )
+
+        color = "#fff3e0"  # naranja claro
+        borde = "#ef6c00"  # naranja fuerte
+        icono = "⚠️"
+
+    # Mostrar el título centrado y la tarjeta
+    st.markdown(
+        f"""
+        <div style='text-align:center; margin-top:25px;'>
+            <h4 style='color:#003366; font-family:"Segoe UI", sans-serif; margin-bottom:8px;'>
+                📋 Conclusión Operativa
+            </h4>
+        </div>
+
+        <div style='background-color:{color};
+                    border-left:6px solid {borde};
+                    padding:15px 22px;
+                    margin-top:8px;
+                    border-radius:6px;
+                    color:#222;
+                    font-size:16px;
+                    line-height:1.6;
+                    font-family:"Segoe UI", sans-serif;'>
+            <b>{icono} Conclusión:</b><br>
+            {texto}
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
 
 def agregar_leyenda(m):
     legend_html = """
