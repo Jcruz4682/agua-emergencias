@@ -241,7 +241,19 @@ if modo == "Sector":
     demanda = float(row.get("Demanda_m3_dia",0))
     resultados, restante, viajes, costo, consumo = asignar_pozos(row.geometry.centroid, demanda, escenario_sel, cisterna_sel, pozos_gdf)
 
-    st.markdown(f"### 🧩 Contexto: Escenario {escenario_sel}% – Cisterna {cisterna_sel} – Nivel: Sector")
+    # --- Contexto descriptivo adaptado ---
+if modo == "Sector":
+    nivel_texto = "Por sector"
+elif modo == "Distrito":
+    nivel_texto = "Por distrito"
+elif modo == "Combinación Distritos":
+    nivel_texto = "Por combinación de distritos"
+else:
+    nivel_texto = "Resumen general"
+
+st.markdown(
+    f"### 🧩 Contexto: Escenario {escenario_sel}% – Cisterna {cisterna_sel} – Nivel: {nivel_texto}"
+)
     mostrar_kpis(f"📍 Sector {sector_sel}", demanda, restante, viajes, costo, consumo, resultados)
 
     # Tabla
@@ -400,7 +412,19 @@ elif modo == "Distrito":
     demanda = float(row.get("Demanda_Distrito_m3_30_lhd",0))
     resultados, restante, viajes, costo, consumo = asignar_pozos(row.geometry.centroid, demanda, escenario_sel, cisterna_sel, pozos_gdf)
 
-    st.markdown(f"### 🧩 Contexto: Escenario {escenario_sel}% – Cisterna {cisterna_sel} – Nivel: Distrito")
+    # --- Contexto descriptivo adaptado ---
+if modo == "Sector":
+    nivel_texto = "Por sector"
+elif modo == "Distrito":
+    nivel_texto = "Por distrito"
+elif modo == "Combinación Distritos":
+    nivel_texto = "Por combinación de distritos"
+else:
+    nivel_texto = "Resumen general"
+
+st.markdown(
+    f"### 🧩 Contexto: Escenario {escenario_sel}% – Cisterna {cisterna_sel} – Nivel: {nivel_texto}"
+)
     mostrar_kpis(f"🏙️ Distrito {dist_sel}", demanda, restante, viajes, costo, consumo, resultados)
 
     st.markdown("### 📘 Resultados por pozo")
@@ -535,7 +559,19 @@ elif modo == "Combinación Distritos":
         geom_union = unary_union(rows.geometry)
         resultados, restante, viajes, costo, consumo = asignar_pozos(geom_union.centroid, demanda, escenario_sel, cisterna_sel, pozos_gdf)
 
-        st.markdown(f"### 🧩 Contexto: Escenario {escenario_sel}% – Cisterna {cisterna_sel} – Nivel: Combinación")
+        # --- Contexto descriptivo adaptado ---
+if modo == "Sector":
+    nivel_texto = "Por sector"
+elif modo == "Distrito":
+    nivel_texto = "Por distrito"
+elif modo == "Combinación Distritos":
+    nivel_texto = "Por combinación de distritos"
+else:
+    nivel_texto = "Resumen general"
+
+st.markdown(
+    f"### 🧩 Contexto: Escenario {escenario_sel}% – Cisterna {cisterna_sel} – Nivel: {nivel_texto}"
+)
         mostrar_kpis(f"🌀 Combinación: {', '.join(seleccion)}", demanda, restante, viajes, costo, consumo, resultados)
 
         st.markdown("### 📘 Resultados por pozo")
