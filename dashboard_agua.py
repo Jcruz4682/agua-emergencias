@@ -332,7 +332,7 @@ fig_eff.update_layout(
 )
 
                       title="Comparación de eficiencia hídrico-económica por escenario y tipo de cisterna",
-                      color_discrete_map={"19 m³":"#0077b6", "34 m³":"#009e73"})
+                      color_discrete_map={"19 m³":"#0077b6", "34 m³":"#009e73"}
     fig_eff.update_traces(textposition="top center")
     fig_eff.update_layout(
         plot_bgcolor="white",
@@ -443,7 +443,7 @@ df_comp["Eficiencia_label"] = df_comp["Eficiencia (m³/S/)"].apply(lambda x: f"{
 fig_eff = px.line(df_comp, x="Escenario (%)", y="Eficiencia (m³/S/)", color="Cisterna",
                   markers=True, text="Eficiencia_label",
                   title="Comparación de eficiencia hídrico-económica por escenario y tipo de cisterna",
-                  color_discrete_map={"19 m³":"#0077b6", "34 m³":"#009e73"})
+                  color_discrete_map={"19 m³":"#0077b6", "34 m³":"#009e73"}
 
 fig_eff.update_traces(textposition="top center", textfont_size=12)
 fig_eff.update_layout(
