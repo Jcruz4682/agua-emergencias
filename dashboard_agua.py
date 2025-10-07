@@ -324,10 +324,17 @@ if modo == "Sector":
     # Redondear valores para etiquetas más limpias
 df_comp["Eficiencia_label"] = df_comp["Eficiencia (m³/S/)"].apply(lambda x: f"{x:.3f}")
 
-fig_eff = px.line(df_comp, x="Escenario (%)", y="Eficiencia (m³/S/)", color="Cisterna",
-                  markers=True, text="Eficiencia_label",
-                  title="Comparación de eficiencia hídrico-económica por escenario y tipo de cisterna",
-                  color_discrete_map={"19 m³":"#0077b6", "34 m³":"#009e73"})
+# --- Gráfico de eficiencia por escenario y tipo de cisterna ---
+fig_eff = px.line(
+    df_comp,
+    x="Escenario (%)",
+    y="Eficiencia (m³/S/)",
+    color="Cisterna",
+    markers=True,
+    text="Eficiencia_label",
+    title="Comparación de eficiencia hídrico-económica por escenario y tipo de cisterna",
+    color_discrete_map={"19 m³": "#0077b6", "34 m³": "#009e73"}
+)
 
 fig_eff.update_traces(textposition="top center", textfont_size=12)
 fig_eff.update_layout(
@@ -340,21 +347,7 @@ fig_eff.update_layout(
     xaxis_title="Escenario de redistribución (%)",
     legend_title="Tipo de cisterna"
 )
-
-                      title="Comparación de eficiencia hídrico-económica por escenario y tipo de cisterna",
-                      color_discrete_map={"19 m³":"#0077b6", "34 m³":"#009e73"}
-    fig_eff.update_traces(textposition="top center")
-    fig_eff.update_layout(
-        plot_bgcolor="white",
-        font=dict(family="Segoe UI", size=13, color="#222"),
-        title=dict(font=dict(size=16, color="#003366")),
-        xaxis=dict(showgrid=True, gridcolor="lightgray"),
-        yaxis=dict(showgrid=True, gridcolor="lightgray"),
-        yaxis_title="Eficiencia (m³ por S/)",
-        xaxis_title="Escenario de redistribución (%)",
-        legend_title="Tipo de cisterna"
-    )
-    st.plotly_chart(fig_eff, use_container_width=True)
+st.plotly_chart(fig_eff, use_container_width=True)
 
     # --- Comparativa directa: Eficiencia promedio por tipo de cisterna ---
     df_prom = df_comp.groupby("Cisterna")["Eficiencia (m³/S/)"].mean().reset_index()
@@ -450,10 +443,17 @@ elif modo == "Distrito":
     # Redondear valores para etiquetas más limpias
 df_comp["Eficiencia_label"] = df_comp["Eficiencia (m³/S/)"].apply(lambda x: f"{x:.3f}")
 
-fig_eff = px.line(df_comp, x="Escenario (%)", y="Eficiencia (m³/S/)", color="Cisterna",
-                  markers=True, text="Eficiencia_label",
-                  title="Comparación de eficiencia hídrico-económica por escenario y tipo de cisterna",
-                  color_discrete_map={"19 m³":"#0077b6", "34 m³":"#009e73"}
+# --- Gráfico de eficiencia por escenario y tipo de cisterna ---
+fig_eff = px.line(
+    df_comp,
+    x="Escenario (%)",
+    y="Eficiencia (m³/S/)",
+    color="Cisterna",
+    markers=True,
+    text="Eficiencia_label",
+    title="Comparación de eficiencia hídrico-económica por escenario y tipo de cisterna",
+    color_discrete_map={"19 m³": "#0077b6", "34 m³": "#009e73"}
+)
 
 fig_eff.update_traces(textposition="top center", textfont_size=12)
 fig_eff.update_layout(
@@ -466,21 +466,8 @@ fig_eff.update_layout(
     xaxis_title="Escenario de redistribución (%)",
     legend_title="Tipo de cisterna"
 )
+st.plotly_chart(fig_eff, use_container_width=True)
 
-                      title="Comparación de eficiencia hídrico-económica por escenario y tipo de cisterna",
-                      color_discrete_map={"19 m³":"#0077b6", "34 m³":"#009e73"})
-    fig_eff.update_traces(textposition="top center")
-    fig_eff.update_layout(
-        plot_bgcolor="white",
-        font=dict(family="Segoe UI", size=13, color="#222"),
-        title=dict(font=dict(size=16, color="#003366")),
-        xaxis=dict(showgrid=True, gridcolor="lightgray"),
-        yaxis=dict(showgrid=True, gridcolor="lightgray"),
-        yaxis_title="Eficiencia (m³ por S/)",
-        xaxis_title="Escenario de redistribución (%)",
-        legend_title="Tipo de cisterna"
-    )
-    st.plotly_chart(fig_eff, use_container_width=True)
 
     # --- Comparativa directa: Eficiencia promedio por tipo de cisterna ---
     df_prom = df_comp.groupby("Cisterna")["Eficiencia (m³/S/)"].mean().reset_index()
