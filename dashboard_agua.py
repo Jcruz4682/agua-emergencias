@@ -255,8 +255,6 @@ if modo == "Sector":
     "Consumo (galones)": "{:,.1f}",
     "Distancia (km)": "{:,.2f}"
 })
-
-    })
     st.dataframe(styled_df, use_container_width=True)
 
     # Gráfico
