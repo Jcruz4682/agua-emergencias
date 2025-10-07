@@ -263,33 +263,43 @@ if modo == "Sector":
         use_container_width=True
     )
 
-    # Mapa
+        # --- 🗺️ MAPA CON OPCIÓN DE ZONA DE CALOR ---
     st.markdown("### 🗺️ Ubicación espacial")
-    show_heat = st.checkbox("Mostrar mapa de calor por costo (S/)", value=False)
-    m = folium.Map(location=[row.geometry.centroid.y, row.geometry.centroid.x], zoom_start=13, tiles="cartodbpositron")
-    folium.GeoJson(row.geometry, style_function=lambda x: {"color":"red","fillOpacity":0.3}).add_to(m)
+    show_heat = st.checkbox("Mostrar mapa de calor por costo (S/)", value=False, key=f"heat_{modo.lower()}")
+
+    m = folium.Map(location=[row.geometry.centroid.y, row.geometry.centroid.x],
+                   zoom_start=12 if modo == "Distrito" else 13,
+                   tiles="cartodbpositron")
+
+    # Capa base del área analizada
+    color_mapa = "green" if modo == "Distrito" else "red"
+    folium.GeoJson(row.geometry, style_function=lambda x: {"color": color_mapa, "fillOpacity": 0.3}).add_to(m)
+
+    # Capa de pozos seleccionados
     m = dibujar_pozos(resultados, m)
+
+    # --- ZONA DE CALOR (si se activa la casilla) ---
     if show_heat and len(resultados) > 0:
-    heat_data = [[r[6].y, r[6].x, r[3]] for r in resultados if r[6] is not None]
-    plugins.HeatMap(heat_data, radius=18, blur=25, max_zoom=10).add_to(m)
+        heat_data = [[r[6].y, r[6].x, r[3]] for r in resultados if r[6] is not None]
+        plugins.HeatMap(heat_data, radius=18, blur=25, max_zoom=10).add_to(m)
 
-    # Leyenda específica para el mapa de calor
-    legend_heat = """
-    <div style="position: fixed; bottom: 20px; right: 20px; width: 210px;
-                background-color: white; border:2px solid #666; z-index:9999;
-                font-size:14px; padding:10px; border-radius:8px;">
-        <b>Mapa de calor – Costo operativo (S/)</b><br>
-        <span style="color:#ff0000;">●</span> Mayor costo<br>
-        <span style="color:#ffcc00;">●</span> Costo medio<br>
-        <span style="color:#00cc00;">●</span> Menor costo
-    </div>
-    """
-    m.get_root().html.add_child(folium.Element(legend_heat))
+        # Leyenda específica para el mapa de calor
+        legend_heat = """
+        <div style="position: fixed; bottom: 20px; right: 20px; width: 210px;
+                    background-color: white; border:2px solid #666; z-index:9999;
+                    font-size:14px; padding:10px; border-radius:8px;">
+            <b>Mapa de calor – Costo operativo (S/)</b><br>
+            <span style="color:#ff0000;">●</span> Mayor costo<br>
+            <span style="color:#ffcc00;">●</span> Costo medio<br>
+            <span style="color:#00cc00;">●</span> Menor costo
+        </div>
+        """
+        m.get_root().html.add_child(folium.Element(legend_heat))
 
+    # Leyenda general del mapa (pozos, sectores o distritos)
     m = agregar_leyenda(m)
-    st_folium(m, width=900, height=500)
 
-    agregar_conclusion("sector", sector_sel, demanda, restante, viajes, costo, consumo, resultados)
+    st_folium(m, width=900, height=500)
 
     # =====================================================
     # 🔍 ANÁLISIS COMPARATIVO POST-CONCLUSIÓN
